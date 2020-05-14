@@ -74,6 +74,11 @@ func DeleteTTL(ctx cloudevents.EventContext) error {
 	return ctx.SetExtension(TTLAttribute, nil)
 }
 
+// DeleteTTL removes the TTL CE extension attribute
+func DeleteTTLv2(ctx cloudeventsv2.EventContext) error {
+	return ctx.SetExtension(TTLAttribute, nil)
+}
+
 // TTLDefaulter returns a cloudevents event defaulter that will manage the TTL
 // for events with the following rules:
 //   If TTL is not found, it will set it to the default passed in.
