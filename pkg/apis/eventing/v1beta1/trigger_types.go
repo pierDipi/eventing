@@ -46,6 +46,7 @@ const (
 
 // Trigger represents a request to have events delivered to a consumer from a
 // Broker's event pool.
+// +kubebuilder:storageversion
 type Trigger struct {
 	metav1.TypeMeta `json:",inline"`
 	// +optional
@@ -118,7 +119,7 @@ type TriggerStatus struct {
 	duckv1.Status `json:",inline"`
 
 	// SubscriberURI is the resolved URI of the receiver for this Trigger.
-	SubscriberURI *apis.URL `json:"subscriberUri,omitempty"`
+	SubscriberURI string `json:"subscriberUri,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

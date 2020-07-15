@@ -55,11 +55,11 @@ type SubscriberSpec struct {
 	// +optional
 	Generation int64 `json:"generation,omitempty"`
 	// +optional
-	SubscriberURI *apis.URL `json:"subscriberURI,omitempty"`
+	SubscriberURI string `json:"subscriberURI,omitempty"`
 	// +optional
-	ReplyURI *apis.URL `json:"replyURI,omitempty"`
+	ReplyURI string `json:"replyURI,omitempty"`
 	// +optional
-	DeadLetterSinkURI *apis.URL `json:"deadLetterSink,omitempty"`
+	DeadLetterSinkURI string `json:"deadLetterSink,omitempty"`
 	// +optional
 	Delivery *duckv1beta1.DeliverySpec `json:"delivery,omitempty"`
 }

@@ -36,6 +36,7 @@ import (
 // minimal knowledge of the event routing strategy. Receivers use Triggers to
 // request delivery of events from a Broker's pool to a specific URL or
 // Addressable endpoint.
+// +kubebuilder:subresource:status
 type Broker struct {
 	metav1.TypeMeta `json:",inline"`
 	// +optional

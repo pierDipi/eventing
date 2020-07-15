@@ -41,10 +41,10 @@ type SubscriberSpec struct {
 	Generation int64 `json:"generation,omitempty"`
 	// SubscriberURI is the endpoint for the subscriber
 	// +optional
-	SubscriberURI *apis.URL `json:"subscriberUri,omitempty"`
+	SubscriberURI string `json:"subscriberUri,omitempty"`
 	// ReplyURI is the endpoint for the reply
 	// +optional
-	ReplyURI *apis.URL `json:"replyUri,omitempty"`
+	ReplyURI string `json:"replyUri,omitempty"`
 	// +optional
 	// DeliverySpec contains options controlling the event delivery
 	// +optional
@@ -71,6 +71,7 @@ type SubscriberStatus struct {
 // Subscribable is a skeleton type wrapping Subscribable in the manner we expect resource writers
 // defining compatible resources to embed it. We will typically use this type to deserialize
 // SubscribableType ObjectReferences and access the Subscription data.  This is not a real resource.
+// +kubebuilder:storageversion
 type Subscribable struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -1,0 +1,85 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: eventtypes.eventing.knative.dev
+spec:
+  group: eventing.knative.dev
+  names:
+    kind: EventType
+    listKind: EventTypeList
+    plural: eventtypes
+    singular: eventtype
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: Spec defines the desired state of the EventType.
+          properties:
+            broker:
+              description: TODO remove https://github.com/knative/eventing/issues/2750
+                Broker refers to the Broker that can provide the EventType.
+              type: string
+            description:
+              description: Description is an optional field used to describe the EventType,
+                in any meaningful way.
+              type: string
+            schema:
+              description: Schema is a URI, it represents the CloudEvents schemaurl
+                extension attribute. It may be a JSON schema, a protobuf schema, etc.
+                It is optional.
+              type: string
+            schemaData:
+              description: SchemaData allows the CloudEvents schema to be stored directly
+                in the EventType. Content is dependent on the encoding. Optional attribute.
+                The contents are not validated or manipulated by the system.
+              type: string
+            source:
+              description: Source is a URI, it represents the CloudEvents source.
+              type: string
+            type:
+              description: Type represents the CloudEvents type. It is authoritative.
+              type: string
+          required:
+          - type
+          type: object
+        status:
+          description: Status represents the current state of the EventType. This
+            data may be out of date. TODO might be removed https://github.com/knative/eventing/issues/2750
+          properties:
+            annotations:
+              additionalProperties:
+                type: string
+              description: Annotations is additional Status fields for the Resource
+                to save some additional State as well as convey more information to
+                the user. This is roughly akin to Annotations on any k8s resource,
+                just the reconciler conveying richer information outwards.
+              type: object
+            conditions:
+              $ref: '#/definitions/knative.dev~1pkg~1apis~0Conditions'
+              description: Conditions the latest available observations of a resource's
+                current state.
+            observedGeneration:
+              description: ObservedGeneration is the 'Generation' of the Service that
+                was last processed by the controller.
+              format: int64
+              type: integer
+          type: object
+      type: object
+  version: v1beta1
+  versions:
+  - name: v1beta1
+    served: true
+    storage: true

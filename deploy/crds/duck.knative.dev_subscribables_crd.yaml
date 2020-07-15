@@ -1,0 +1,378 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: subscribables.duck.knative.dev
+spec:
+  group: duck.knative.dev
+  names:
+    kind: Subscribable
+    listKind: SubscribableList
+    plural: subscribables
+    singular: subscribable
+  scope: Namespaced
+  version: v1
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        description: Subscribable is a skeleton type wrapping Subscribable in the
+          manner we expect resource writers defining compatible resources to embed
+          it. We will typically use this type to deserialize SubscribableType ObjectReferences
+          and access the Subscription data.  This is not a real resource.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: SubscribableSpec is the part where Subscribable object is
+              configured as to be compatible with Subscribable contract.
+            properties:
+              subscribers:
+                description: This is the list of subscriptions for this subscribable.
+                items:
+                  description: "SubscriberSpec defines a single subscriber to a Subscribable.
+                    \n At least one of SubscriberURI and ReplyURI must be present"
+                  properties:
+                    delivery:
+                      description: DeliverySpec contains options controlling the event
+                        delivery
+                      properties:
+                        backoffDelay:
+                          description: "BackoffDelay is the delay before retrying.
+                            More information on Duration format: https://www.ietf.org/rfc/rfc3339.txt
+                            \n For linear policy, backoff delay is the time interval
+                            between retries. For exponential policy , backoff delay
+                            is backoffDelay*2^<numberOfRetries>."
+                          type: string
+                        backoffPolicy:
+                          description: BackoffPolicy is the retry backoff policy (linear,
+                            exponential).
+                          type: string
+                        deadLetterSink:
+                          description: DeadLetterSink is the sink receiving event
+                            that could not be sent to a destination.
+                          properties:
+                            ref:
+                              description: Ref points to an Addressable.
+                              properties:
+                                apiVersion:
+                                  description: API version of the referent.
+                                  type: string
+                                kind:
+                                  description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                                  type: string
+                                namespace:
+                                  description: 'Namespace of the referent. More info:
+                                    https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                                    This is optional field, it gets defaulted to the
+                                    object holding it if left out.'
+                                  type: string
+                              required:
+                              - apiVersion
+                              - kind
+                              - name
+                              type: object
+                            uri:
+                              description: URI can be an absolute URL(non-empty scheme
+                                and non-empty host) pointing to the target or a relative
+                                URI. Relative URIs will be resolved using the base
+                                URI retrieved from Ref.
+                              type: string
+                          type: object
+                        retry:
+                          description: Retry is the minimum number of retries the
+                            sender should attempt when sending an event before moving
+                            it to the dead letter sink.
+                          format: int32
+                          type: integer
+                      type: object
+                    generation:
+                      description: Generation of the origin of the subscriber with
+                        uid:UID.
+                      format: int64
+                      type: integer
+                    replyUri:
+                      description: ReplyURI is the endpoint for the reply
+                      type: string
+                    subscriberUri:
+                      description: SubscriberURI is the endpoint for the subscriber
+                      type: string
+                    uid:
+                      description: UID is used to understand the origin of the subscriber.
+                      type: string
+                  type: object
+                type: array
+            type: object
+          status:
+            description: SubscribableStatus is the part where SubscribableStatus object
+              is configured as to be compatible with Subscribable contract.
+            properties:
+              subscribers:
+                description: This is the list of subscription's statuses for this
+                  channel.
+                items:
+                  description: SubscriberStatus defines the status of a single subscriber
+                    to a Channel.
+                  properties:
+                    message:
+                      description: A human readable message indicating details of
+                        Ready status.
+                      type: string
+                    observedGeneration:
+                      description: Generation of the origin of the subscriber with
+                        uid:UID.
+                      format: int64
+                      type: integer
+                    ready:
+                      description: Status of the subscriber.
+                      type: string
+                    uid:
+                      description: UID is used to understand the origin of the subscriber.
+                      type: string
+                  type: object
+                type: array
+            type: object
+        required:
+        - spec
+        - status
+        type: object
+    served: true
+    storage: true
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Subscribable is the schema for the subscribable portion of the
+          spec section of the resource.
+        properties:
+          subscribers:
+            description: This is the list of subscriptions for this subscribable.
+            items:
+              description: SubscriberSpec defines a single subscriber to a Subscribable.
+                Ref is a reference to the Subscription this SubscriberSpec was created
+                for SubscriberURI is the endpoint for the subscriber ReplyURI is the
+                endpoint for the reply At least one of SubscriberURI and ReplyURI
+                must be present
+              properties:
+                deadLetterSink:
+                  type: string
+                delivery:
+                  description: DeliverySpec contains the delivery options for event
+                    senders, such as channelable and source.
+                  properties:
+                    backoffDelay:
+                      description: "BackoffDelay is the delay before retrying. More
+                        information on Duration format: https://www.ietf.org/rfc/rfc3339.txt
+                        \n For linear policy, backoff delay is the time interval between
+                        retries. For exponential policy , backoff delay is backoffDelay*2^<numberOfRetries>."
+                      type: string
+                    backoffPolicy:
+                      description: BackoffPolicy is the retry backoff policy (linear,
+                        exponential).
+                      type: string
+                    deadLetterSink:
+                      description: DeadLetterSink is the sink receiving event that
+                        could not be sent to a destination.
+                      properties:
+                        ref:
+                          description: Ref points to an Addressable.
+                          properties:
+                            apiVersion:
+                              description: API version of the referent.
+                              type: string
+                            kind:
+                              description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                              type: string
+                            namespace:
+                              description: 'Namespace of the referent. More info:
+                                https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                                This is optional field, it gets defaulted to the object
+                                holding it if left out.'
+                              type: string
+                          required:
+                          - apiVersion
+                          - kind
+                          - name
+                          type: object
+                        uri:
+                          description: URI can be an absolute URL(non-empty scheme
+                            and non-empty host) pointing to the target or a relative
+                            URI. Relative URIs will be resolved using the base URI
+                            retrieved from Ref.
+                          type: string
+                      type: object
+                    retry:
+                      description: Retry is the minimum number of retries the sender
+                        should attempt when sending an event before moving it to the
+                        dead letter sink.
+                      format: int32
+                      type: integer
+                  type: object
+                generation:
+                  description: Generation of the origin of the subscriber with uid:UID.
+                  format: int64
+                  type: integer
+                replyURI:
+                  type: string
+                subscriberURI:
+                  type: string
+                uid:
+                  description: UID is used to understand the origin of the subscriber.
+                  type: string
+              type: object
+            type: array
+        type: object
+    served: true
+    storage: false
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: Subscribable is a skeleton type wrapping Subscribable in the
+          manner we expect resource writers defining compatible resources to embed
+          it. We will typically use this type to deserialize SubscribableType ObjectReferences
+          and access the Subscription data.  This is not a real resource.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: SubscribableSpec is the part where Subscribable object is
+              configured as to be compatible with Subscribable contract.
+            properties:
+              subscribers:
+                description: This is the list of subscriptions for this subscribable.
+                items:
+                  description: "SubscriberSpec defines a single subscriber to a Subscribable.
+                    \n At least one of SubscriberURI and ReplyURI must be present"
+                  properties:
+                    delivery:
+                      description: DeliverySpec contains options controlling the event
+                        delivery
+                      properties:
+                        backoffDelay:
+                          description: "BackoffDelay is the delay before retrying.
+                            More information on Duration format: https://www.ietf.org/rfc/rfc3339.txt
+                            \n For linear policy, backoff delay is the time interval
+                            between retries. For exponential policy , backoff delay
+                            is backoffDelay*2^<numberOfRetries>."
+                          type: string
+                        backoffPolicy:
+                          description: BackoffPolicy is the retry backoff policy (linear,
+                            exponential).
+                          type: string
+                        deadLetterSink:
+                          description: DeadLetterSink is the sink receiving event
+                            that could not be sent to a destination.
+                          properties:
+                            ref:
+                              description: Ref points to an Addressable.
+                              properties:
+                                apiVersion:
+                                  description: API version of the referent.
+                                  type: string
+                                kind:
+                                  description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                                  type: string
+                                namespace:
+                                  description: 'Namespace of the referent. More info:
+                                    https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                                    This is optional field, it gets defaulted to the
+                                    object holding it if left out.'
+                                  type: string
+                              required:
+                              - apiVersion
+                              - kind
+                              - name
+                              type: object
+                            uri:
+                              description: URI can be an absolute URL(non-empty scheme
+                                and non-empty host) pointing to the target or a relative
+                                URI. Relative URIs will be resolved using the base
+                                URI retrieved from Ref.
+                              type: string
+                          type: object
+                        retry:
+                          description: Retry is the minimum number of retries the
+                            sender should attempt when sending an event before moving
+                            it to the dead letter sink.
+                          format: int32
+                          type: integer
+                      type: object
+                    generation:
+                      description: Generation of the origin of the subscriber with
+                        uid:UID.
+                      format: int64
+                      type: integer
+                    replyUri:
+                      description: ReplyURI is the endpoint for the reply
+                      type: string
+                    subscriberUri:
+                      description: SubscriberURI is the endpoint for the subscriber
+                      type: string
+                    uid:
+                      description: UID is used to understand the origin of the subscriber.
+                      type: string
+                  type: object
+                type: array
+            type: object
+          status:
+            description: SubscribableStatus is the part where SubscribableStatus object
+              is configured as to be compatible with Subscribable contract.
+            properties:
+              subscribers:
+                description: This is the list of subscription's statuses for this
+                  channel.
+                items:
+                  description: SubscriberStatus defines the status of a single subscriber
+                    to a Channel.
+                  properties:
+                    message:
+                      description: A human readable message indicating details of
+                        Ready status.
+                      type: string
+                    observedGeneration:
+                      description: Generation of the origin of the subscriber with
+                        uid:UID.
+                      format: int64
+                      type: integer
+                    ready:
+                      description: Status of the subscriber.
+                      type: string
+                    uid:
+                      description: UID is used to understand the origin of the subscriber.
+                      type: string
+                  type: object
+                type: array
+            type: object
+        required:
+        - spec
+        - status
+        type: object
+    served: true
+    storage: false

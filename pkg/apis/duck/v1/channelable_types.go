@@ -31,6 +31,7 @@ import (
 // Channelable is a skeleton type wrapping Subscribable and Addressable in the manner we expect resource writers
 // defining compatible resources to embed it. We will typically use this type to deserialize
 // Channelable ObjectReferences and access their subscription and address data.  This is not a real resource.
+// +kubebuilder:storageversion
 type Channelable struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

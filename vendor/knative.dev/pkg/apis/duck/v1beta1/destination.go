@@ -43,7 +43,7 @@ type Destination struct {
 
 	// URI can be an absolute URL(non-empty scheme and non-empty host) pointing to the target or a relative URI. Relative URIs will be resolved using the base URI retrieved from Ref.
 	// +optional
-	URI *apis.URL `json:"uri,omitempty"`
+	URI string `json:"uri,omitempty"`
 }
 
 func (dest *Destination) Validate(ctx context.Context) *apis.FieldError {

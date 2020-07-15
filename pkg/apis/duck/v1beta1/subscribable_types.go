@@ -41,10 +41,10 @@ type SubscriberSpec struct {
 	Generation int64 `json:"generation,omitempty"`
 	// SubscriberURI is the endpoint for the subscriber
 	// +optional
-	SubscriberURI *apis.URL `json:"subscriberUri,omitempty"`
+	SubscriberURI string `json:"subscriberUri,omitempty"`
 	// ReplyURI is the endpoint for the reply
 	// +optional
-	ReplyURI *apis.URL `json:"replyUri,omitempty"`
+	ReplyURI string `json:"replyUri,omitempty"`
 	// +optional
 	// DeliverySpec contains options controlling the event delivery
 	// +optional

@@ -66,11 +66,11 @@ type EventTypeSpec struct {
 	Type string `json:"type"`
 	// Source is a URI, it represents the CloudEvents source.
 	// +optional
-	Source *apis.URL `json:"source,omitempty"`
+	Source string `json:"source,omitempty"`
 	// Schema is a URI, it represents the CloudEvents schemaurl extension attribute.
 	// It may be a JSON schema, a protobuf schema, etc. It is optional.
 	// +optional
-	Schema *apis.URL `json:"schema,omitempty"`
+	Schema string `json:"schema,omitempty"`
 	// SchemaData allows the CloudEvents schema to be stored directly in the
 	// EventType. Content is dependent on the encoding. Optional attribute.
 	// The contents are not validated or manipulated by the system.
