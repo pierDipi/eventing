@@ -437,7 +437,7 @@ func TestReconcile(t *testing.T) {
 				Name: subscriptionName,
 			}},
 			WantCreates: []runtime.Object{
-				makeFilterSubscription(),
+				makeFilterSubscription(testNs),
 			},
 		}, {
 			Name: "Trigger has subscriber ref exists",
