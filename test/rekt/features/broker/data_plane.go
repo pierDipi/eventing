@@ -18,14 +18,23 @@ package broker
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 
+	"github.com/cloudevents/sdk-go/v2/event"
+	cetest "github.com/cloudevents/sdk-go/v2/test"
+	"github.com/cloudevents/sdk-go/v2/types"
 	"github.com/google/uuid"
 	"knative.dev/eventing/test/rekt/features/knconf"
+	triggerfeatures "knative.dev/eventing/test/rekt/features/trigger"
 	"knative.dev/eventing/test/rekt/resources/broker"
+	triggerresources "knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/pkg/apis"
 	"knative.dev/reconciler-test/pkg/eventshub"
+	eventshubassert "knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/state"
+	"knative.dev/reconciler-test/resources/svc"
 )
 
 func DataPlaneConformance(brokerName string) *feature.FeatureSet {
@@ -46,17 +55,31 @@ func DataPlaneConformance(brokerName string) *feature.FeatureSet {
 func DataPlaneIngress(brokerName string) *feature.Feature {
 	f := feature.NewFeatureNamed("Ingress")
 
-	f.Setup("Set Broker Name", func(ctx context.Context, t feature.T) {
-		state.SetOrFail(ctx, t, "brokerName", brokerName)
-	})
+	f.Setup("Set Broker Name", setBrokerName(brokerName))
+
+	// Create a trigger.
+	subscriberName := feature.MakeRandomK8sName("sub")
+	f.Setup("install a service", svc.Install(subscriberName, "app", "rekt"))
+
+	triggerName := feature.MakeRandomK8sName("trigger")
+	f.Setup("Create a Trigger", triggerresources.Install(triggerName, brokerName,
+		triggerresources.WithSubscriber(svc.AsKReference(subscriberName), ""),
+	))
+
+	f.Requirement("Broker is ready", broker.IsReady(brokerName))
+	f.Requirement("Trigger is ready", triggerresources.IsReady(triggerName))
+
+	f.Setup("Set Trigger Name", triggerfeatures.SetTriggerName(triggerName))
 
 	f.Stable("Conformance").
 		Must("The ingress endpoint(s) MUST conform to at least one of the following versions of the specification: 0.3, 1.0",
 			brokerAcceptsCEVersions).
 		May("Other versions MAY be rejected.",
 			brokerRejectsUnknownCEVersion).
-		ShouldNot("The Broker SHOULD NOT perform an upgrade of the produced event's CloudEvents version.",
-			brokerEventVersionNotUpgraded).
+		ShouldNot(fmt.Sprintf("The Broker SHOULD NOT perform an upgrade of the produced event's CloudEvents version %s.", event.CloudEventsVersionV03),
+			brokerEventVersionNotUpgraded(event.CloudEventsVersionV03)).
+		ShouldNot(fmt.Sprintf("The Broker SHOULD NOT perform an upgrade of the produced event's CloudEvents version %s.", event.CloudEventsVersionV1),
+			brokerEventVersionNotUpgraded(event.CloudEventsVersionV1)).
 		Should("It SHOULD support both Binary Content Mode and Structured Content Mode of the HTTP Protocol Binding for CloudEvents.",
 			todo).
 		Must("Brokers MUST reject all HTTP produce requests with a method other than POST responding with HTTP status code `405 Method Not Supported`.",
@@ -307,9 +330,31 @@ func brokerRejectsMalformedCE(ctx context.Context, t feature.T) {
 	}
 }
 
-// source ---> [broker] ---[trigger]--> recorder
-func brokerEventVersionNotUpgraded(ctx context.Context, t feature.T) {
-	// brokerName := state.GetStringOrFail(ctx, t, "brokerName")
+func brokerEventVersionNotUpgraded(version string) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		b := getBroker(ctx, t)
 
-	// Create a trigger,
+		event := cetest.FullEvent()
+		event.SetID(uuid.New().String())
+		event.SetSource((&types.URIRef{URL: url.URL{Scheme: "https", Host: "knative.dev", Path: "/eventing/broker-event-version-not-upgraded-" + version}}).String())
+		event.SetSpecVersion(version)
+
+		t.Logf("Sending event %s", event.String())
+
+		// We need to use a different source name, otherwise, it will try to update
+		// the pod, which is immutable.
+		source := feature.MakeRandomK8sName("source")
+		options := []eventshub.EventsHubOption{
+			eventshub.StartSenderToResource(broker.GVR(), b.Name),
+			eventshub.InputEvent(event),
+		}
+		eventshub.Install(source, options...)(ctx, t)
+
+		store := eventshub.StoreFromContext(ctx, source)
+		store.AssertAtLeast(t, 1, eventshubassert.MatchEvent(
+			cetest.HasId(event.ID()),
+			cetest.HasSource(event.Source()),
+			cetest.HasSpecVersion(event.SpecVersion()),
+		))
+	}
 }
