@@ -13,7 +13,7 @@ A little table to coordinate the midstream release/ci automation for our fork re
 When adding a new release, check if the corresponding version in "Possible Outdated Periodics" column is no longer supported in [OpenShift Serverless - Support Dates Matrix](https://access.redhat.com/support/policy/updates/openshift#ossrvless) and remove the corresponding periodics in such case.
 
 | Release | Release Manager | Possible Outdated Periodics |
-| ------- | --------------- |-----------------------------|
+|---------|-----------------|-----------------------------|
 | v0.25   | devguyio        | OSS 1.15 (v0.21 periodics)  |
 | v0.26   | lberk           | OSS 1.16 (v0.22 periodics)  |
 | v1.0    | aliok           | OSS 1.17 (v0.23 periodics)  |
@@ -29,24 +29,16 @@ When adding a new release, check if the corresponding version in "Possible Outda
 
 | Week Starting        | CI Duty  |
 |----------------------|----------|
-| 2021-09-06T01:00:00Z | aliok    |
-| 2021-09-13T01:00:00Z | devguyio |
-| 2021-09-20T01:00:00Z | lberk    |
-| 2021-09-27T01:00:00  | devguyio |
-| 2021-10-04T01:00:00Z | devguyio |
-| 2021-10-11T01:00:00Z | matzew   |
-| 2021-10-18T01:00:00Z | aliok    |
-| 2021-10-25T01:00:00Z | lberk    |
-| 2021-11-01T01:00:00Z | pierdipi |
-| 2021-11-08T01:00:00Z | devguyio |
-| 2021-11-15T01:00:00Z | lberk    |
-| 2021-11-22T01:00:00Z | matzew   |
-| 2021-11-29T01:00:00Z | pierdipi |
-| 2021-12-06T01:00:00Z | aliok    |
-| 2021-12-13T01:00:00Z | devguyio |
-| 2021-12-20T01:00:00Z | lberk    |
-| 2021-12-27T01:00:00Z | matzew   |
-| 2022-01-03T01:00:00Z | pierdipi |
+| 2022-01-10T01:00:00Z | aliok    |
+| 2022-01-17T01:00:00Z | devguyio |
+| 2022-01-24T01:00:00Z | lberk    |
+| 2022-01-31T01:00:00  | matzew   |
+| 2022-02-07T01:00:00Z | pierDipi |
+| 2022-02-14T01:00:00Z | aliok    |
+| 2022-02-21T01:00:00Z | devguyio |
+| 2022-02-28T01:00:00Z | lberk    |
+| 2022-03-07T01:00:00  | matzew   |
+| 2022-03-14T01:00:00Z | pierDipi |
 
 
 ## How this repository works ?
