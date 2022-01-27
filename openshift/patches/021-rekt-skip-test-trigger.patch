@@ -1,0 +1,12 @@
+diff --git a/test/rekt/trigger_test.go b/test/rekt/trigger_test.go
+index 1600c3c72..be0214d40 100644
+--- a/test/rekt/trigger_test.go
++++ b/test/rekt/trigger_test.go
+@@ -44,6 +44,7 @@ func TestTriggerDefaulting(t *testing.T) {
+ }
+ 
+ func TestTriggerWithDLS(t *testing.T) {
++	t.Skip("SRVKE-1046")
+ 	ctx, env := global.Environment(
+ 		knative.WithKnativeNamespace(system.Namespace()),
+ 		knative.WithLoggingConfig,
