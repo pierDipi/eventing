@@ -44,7 +44,6 @@ func TestTriggerDefaulting(t *testing.T) {
 }
 
 func TestTriggerWithDLS(t *testing.T) {
-	t.Skip("SRVKE-1046")
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
