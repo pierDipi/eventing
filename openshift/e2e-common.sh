@@ -176,7 +176,6 @@ function install_knative_eventing(){
   sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-mtbroker-ingress|${KNATIVE_EVENTING_MTBROKER_INGRESS}|g"                   ci
   sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-mtbroker-filter|${KNATIVE_EVENTING_MTBROKER_FILTER}|g"                     ci
   sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-mtchannel-broker|${KNATIVE_EVENTING_MTCHANNEL_BROKER}|g"                   ci
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-sugar-controller|${KNATIVE_EVENTING_SUGAR_CONTROLLER}|g"                   ci
 
   oc apply -f ci || return 1
   rm ci
