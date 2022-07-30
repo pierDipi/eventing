@@ -18,26 +18,36 @@ package ingress
 
 import (
 	"context"
+	"crypto/sha512"
+	"encoding/base64"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	opencensusclient "github.com/cloudevents/sdk-go/observability/opencensus/v2/client"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/client"
+	"github.com/cloudevents/sdk-go/v2/event"
 	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"knative.dev/pkg/apis"
 
 	"knative.dev/pkg/network"
 
 	"knative.dev/eventing/pkg/apis/eventing"
 	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	"knative.dev/eventing/pkg/broker"
+	eventingv1beta1 "knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1beta1"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/tracing"
@@ -60,6 +70,11 @@ type Handler struct {
 	Reporter StatsReporter
 	// BrokerLister gets broker objects
 	BrokerLister eventinglisters.BrokerLister
+
+	EventingClient *eventingv1beta1.EventingV1beta1Client
+
+	EventTypeCache   map[types.NamespacedName]struct{}
+	EventTypeCacheMu sync.Mutex
 
 	Logger *zap.Logger
 }
@@ -181,6 +196,46 @@ func (h *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	_ = h.Reporter.ReportEventCount(reporterArgs, statusCode)
 
 	writer.WriteHeader(statusCode)
+
+	h.registerEventType(ctx, event, brokerNamespacedName)
+}
+
+func (h *Handler) registerEventType(ctx context.Context, event *event.Event, broker types.NamespacedName) {
+
+	source, _ := apis.ParseURL(event.Source())
+	schema, _ := apis.ParseURL(event.DataSchema())
+	et := &v1beta1.EventType{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: broker.Namespace,
+		},
+		Spec: v1beta1.EventTypeSpec{
+			Type:        event.Type(),
+			Source:      source,
+			Schema:      schema,
+			SchemaData:  "",
+			Broker:      broker.Name,
+			Description: "",
+		},
+	}
+
+	// TODO We don't need SHA properties, use murmur https://en.wikipedia.org/wiki/MurmurHash
+	name := sha512.New()
+	_, _ = io.WriteString(name, et.Spec.Type)
+	_, _ = io.WriteString(name, et.Spec.Source.String())
+	_, _ = io.WriteString(name, et.Spec.Schema.String())
+	_, _ = io.WriteString(name, et.Spec.SchemaData)
+	_, _ = io.WriteString(name, et.Spec.Broker)
+	_, _ = io.WriteString(name, et.Spec.Description)
+
+	name.Write([]byte(et.Spec.Type))
+	name.Write([]byte(et.Spec.Source.String()))
+	name.Write([]byte(et.Spec.Schema.String()))
+	name.Write([]byte(et.Spec.SchemaData))
+	name.Write([]byte(et.Spec.Broker))
+
+	et.Name = utils.ToDNS1123Subdomain(base64.StdEncoding.EncodeToString(name.Sum(nil)))
+
+	h.storeEventType(ctx, et)
 }
 
 func (h *Handler) receive(ctx context.Context, headers http.Header, event *cloudevents.Event, brokerNamespace, brokerName string) (int, time.Duration) {
@@ -241,4 +296,22 @@ func (h *Handler) sendAndRecordDispatchTime(request *http.Request) (*http.Respon
 	resp, err := h.Sender.Send(request)
 	dispatchTime := time.Since(start)
 	return resp, dispatchTime, err
+}
+
+func (h *Handler) storeEventType(ctx context.Context, et *v1beta1.EventType) {
+	key := types.NamespacedName{Namespace: et.GetNamespace(), Name: et.Name}
+
+	h.EventTypeCacheMu.Lock()
+	defer h.EventTypeCacheMu.Unlock()
+
+	if _, ok := h.EventTypeCache[key]; ok {
+		return
+	}
+
+	_, err := h.EventingClient.
+		EventTypes(et.Namespace).
+		Create(ctx, et, metav1.CreateOptions{})
+	if err == nil || apierrors.IsAlreadyExists(err) {
+		h.EventTypeCache[key] = struct{}{}
+	}
 }
