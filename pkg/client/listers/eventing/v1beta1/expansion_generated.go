@@ -25,3 +25,11 @@ type EventTypeListerExpansion interface{}
 // EventTypeNamespaceListerExpansion allows custom methods to be added to
 // EventTypeNamespaceLister.
 type EventTypeNamespaceListerExpansion interface{}
+
+// EventTypeQueryListerExpansion allows custom methods to be added to
+// EventTypeQueryLister.
+type EventTypeQueryListerExpansion interface{}
+
+// EventTypeQueryNamespaceListerExpansion allows custom methods to be added to
+// EventTypeQueryNamespaceLister.
+type EventTypeQueryNamespaceListerExpansion interface{}

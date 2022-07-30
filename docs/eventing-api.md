@@ -2317,6 +2317,8 @@ resolved delivery options.</p>
 Resource Types:
 <ul><li>
 <a href="#eventing.knative.dev/v1beta1.EventType">EventType</a>
+</li><li>
+<a href="#eventing.knative.dev/v1beta1.EventTypeQuery">EventTypeQuery</a>
 </li></ul>
 <h3 id="eventing.knative.dev/v1beta1.EventType">EventType
 </h3>
@@ -2473,6 +2475,151 @@ EventTypeStatus
 <p>Status represents the current state of the EventType.
 This data may be out of date.
 TODO might be removed <a href="https://github.com/knative/eventing/issues/2750">https://github.com/knative/eventing/issues/2750</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="eventing.knative.dev/v1beta1.EventTypeQuery">EventTypeQuery
+</h3>
+<p>
+<p>EventTypeQuery represents a query for event types.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+eventing.knative.dev/v1beta1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>EventTypeQuery</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#eventing.knative.dev/v1beta1.EventTypeQuerySpec">
+EventTypeQuerySpec
+</a>
+</em>
+</td>
+<td>
+<p>Spec defines the desired state of the EventTypeQuery.</p>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>CESQL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#eventing.knative.dev/v1beta1.EventTypeQueryStatus">
+EventTypeQueryStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Status represents the current state of the EventTypeQuery.
+This data may be out of date.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="eventing.knative.dev/v1beta1.EventTypeQuerySpec">EventTypeQuerySpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#eventing.knative.dev/v1beta1.EventTypeQuery">EventTypeQuery</a>)
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>CESQL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="eventing.knative.dev/v1beta1.EventTypeQueryStatus">EventTypeQueryStatus
+</h3>
+<p>
+(<em>Appears on:</em><a href="#eventing.knative.dev/v1beta1.EventTypeQuery">EventTypeQuery</a>)
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>EventTypes</code><br/>
+<em>
+<a href="https://pkg.go.dev/knative.dev/pkg/apis/duck/v1#KReference">
+[]knative.dev/pkg/apis/duck/v1.KReference
+</a>
+</em>
+</td>
+<td>
 </td>
 </tr>
 </tbody>

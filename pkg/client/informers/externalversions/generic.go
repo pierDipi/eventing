@@ -66,6 +66,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=eventing.knative.dev, Version=v1beta1
 	case v1beta1.SchemeGroupVersion.WithResource("eventtypes"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Eventing().V1beta1().EventTypes().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("eventtypequeries"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Eventing().V1beta1().EventTypeQueries().Informer()}, nil
 
 		// Group=flows.knative.dev, Version=v1
 	case flowsv1.SchemeGroupVersion.WithResource("parallels"):

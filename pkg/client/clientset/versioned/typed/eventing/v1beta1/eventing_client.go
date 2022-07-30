@@ -29,6 +29,7 @@ import (
 type EventingV1beta1Interface interface {
 	RESTClient() rest.Interface
 	EventTypesGetter
+	EventTypeQueriesGetter
 }
 
 // EventingV1beta1Client is used to interact with features provided by the eventing.knative.dev group.
@@ -38,6 +39,10 @@ type EventingV1beta1Client struct {
 
 func (c *EventingV1beta1Client) EventTypes(namespace string) EventTypeInterface {
 	return newEventTypes(c, namespace)
+}
+
+func (c *EventingV1beta1Client) EventTypeQueries(namespace string) EventTypeQueryInterface {
+	return newEventTypeQueries(c, namespace)
 }
 
 // NewForConfig creates a new EventingV1beta1Client for the given config.

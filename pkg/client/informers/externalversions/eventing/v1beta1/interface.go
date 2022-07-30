@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// EventTypes returns a EventTypeInformer.
 	EventTypes() EventTypeInformer
+	// EventTypeQueries returns a EventTypeQueryInformer.
+	EventTypeQueries() EventTypeQueryInformer
 }
 
 type version struct {
@@ -42,4 +44,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // EventTypes returns a EventTypeInformer.
 func (v *version) EventTypes() EventTypeInformer {
 	return &eventTypeInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// EventTypeQueries returns a EventTypeQueryInformer.
+func (v *version) EventTypeQueries() EventTypeQueryInformer {
+	return &eventTypeQueryInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

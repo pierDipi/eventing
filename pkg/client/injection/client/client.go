@@ -252,6 +252,137 @@ func (w *wrapEventingV1beta1EventTypeImpl) Watch(ctx context.Context, opts v1.Li
 	return nil, errors.New("NYI: Watch")
 }
 
+func (w *wrapEventingV1beta1) EventTypeQueries(namespace string) typedeventingv1beta1.EventTypeQueryInterface {
+	return &wrapEventingV1beta1EventTypeQueryImpl{
+		dyn: w.dyn.Resource(schema.GroupVersionResource{
+			Group:    "eventing.knative.dev",
+			Version:  "v1beta1",
+			Resource: "eventtypequeries",
+		}),
+
+		namespace: namespace,
+	}
+}
+
+type wrapEventingV1beta1EventTypeQueryImpl struct {
+	dyn dynamic.NamespaceableResourceInterface
+
+	namespace string
+}
+
+var _ typedeventingv1beta1.EventTypeQueryInterface = (*wrapEventingV1beta1EventTypeQueryImpl)(nil)
+
+func (w *wrapEventingV1beta1EventTypeQueryImpl) Create(ctx context.Context, in *v1beta1.EventTypeQuery, opts v1.CreateOptions) (*v1beta1.EventTypeQuery, error) {
+	in.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "eventing.knative.dev",
+		Version: "v1beta1",
+		Kind:    "EventTypeQuery",
+	})
+	uo := &unstructured.Unstructured{}
+	if err := convert(in, uo); err != nil {
+		return nil, err
+	}
+	uo, err := w.dyn.Namespace(w.namespace).Create(ctx, uo, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &v1beta1.EventTypeQuery{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapEventingV1beta1EventTypeQueryImpl) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+	return w.dyn.Namespace(w.namespace).Delete(ctx, name, opts)
+}
+
+func (w *wrapEventingV1beta1EventTypeQueryImpl) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	return w.dyn.Namespace(w.namespace).DeleteCollection(ctx, opts, listOpts)
+}
+
+func (w *wrapEventingV1beta1EventTypeQueryImpl) Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.EventTypeQuery, error) {
+	uo, err := w.dyn.Namespace(w.namespace).Get(ctx, name, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &v1beta1.EventTypeQuery{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapEventingV1beta1EventTypeQueryImpl) List(ctx context.Context, opts v1.ListOptions) (*v1beta1.EventTypeQueryList, error) {
+	uo, err := w.dyn.Namespace(w.namespace).List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &v1beta1.EventTypeQueryList{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapEventingV1beta1EventTypeQueryImpl) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.EventTypeQuery, err error) {
+	uo, err := w.dyn.Namespace(w.namespace).Patch(ctx, name, pt, data, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &v1beta1.EventTypeQuery{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapEventingV1beta1EventTypeQueryImpl) Update(ctx context.Context, in *v1beta1.EventTypeQuery, opts v1.UpdateOptions) (*v1beta1.EventTypeQuery, error) {
+	in.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "eventing.knative.dev",
+		Version: "v1beta1",
+		Kind:    "EventTypeQuery",
+	})
+	uo := &unstructured.Unstructured{}
+	if err := convert(in, uo); err != nil {
+		return nil, err
+	}
+	uo, err := w.dyn.Namespace(w.namespace).Update(ctx, uo, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &v1beta1.EventTypeQuery{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapEventingV1beta1EventTypeQueryImpl) UpdateStatus(ctx context.Context, in *v1beta1.EventTypeQuery, opts v1.UpdateOptions) (*v1beta1.EventTypeQuery, error) {
+	in.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "eventing.knative.dev",
+		Version: "v1beta1",
+		Kind:    "EventTypeQuery",
+	})
+	uo := &unstructured.Unstructured{}
+	if err := convert(in, uo); err != nil {
+		return nil, err
+	}
+	uo, err := w.dyn.Namespace(w.namespace).UpdateStatus(ctx, uo, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := &v1beta1.EventTypeQuery{}
+	if err := convert(uo, out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (w *wrapEventingV1beta1EventTypeQueryImpl) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+	return nil, errors.New("NYI: Watch")
+}
+
 // EventingV1 retrieves the EventingV1Client
 func (w *wrapClient) EventingV1() typedeventingv1.EventingV1Interface {
 	return &wrapEventingV1{

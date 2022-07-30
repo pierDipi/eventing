@@ -32,6 +32,10 @@ func (c *FakeEventingV1beta1) EventTypes(namespace string) v1beta1.EventTypeInte
 	return &FakeEventTypes{c, namespace}
 }
 
+func (c *FakeEventingV1beta1) EventTypeQueries(namespace string) v1beta1.EventTypeQueryInterface {
+	return &FakeEventTypeQueries{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeEventingV1beta1) RESTClient() rest.Interface {
