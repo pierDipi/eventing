@@ -73,6 +73,8 @@ rules:
       - "triggers/status"
       - "eventtypes"
       - "eventtypes/status"
+      - "eventtypequeries"
+      - "eventtypequeries/status"
     verbs: *everything
 
   # Eventing resources and finalizers we care about.

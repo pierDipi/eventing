@@ -92,4 +92,9 @@ var (
 		Group:    GroupName,
 		Resource: "eventtypes",
 	}
+	// EventTypesQueryResource represents a Knative EventTypeQuery
+	EventTypesQueryResource = schema.GroupResource{
+		Group:    GroupName,
+		Resource: "eventtypequeries",
+	}
 )

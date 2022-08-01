@@ -71,7 +71,7 @@ type Handler struct {
 	// BrokerLister gets broker objects
 	BrokerLister eventinglisters.BrokerLister
 
-	EventingClient *eventingv1beta1.EventingV1beta1Client
+	EventingClient eventingv1beta1.EventingV1beta1Interface
 
 	EventTypeCache   map[types.NamespacedName]struct{}
 	EventTypeCacheMu sync.Mutex

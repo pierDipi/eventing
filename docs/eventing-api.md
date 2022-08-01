@@ -1978,7 +1978,7 @@ resolved delivery options.</p>
 <h3 id="eventing.knative.dev/v1.SubscriptionsAPIFilter">SubscriptionsAPIFilter
 </h3>
 <p>
-(<em>Appears on:</em><a href="#eventing.knative.dev/v1.SubscriptionsAPIFilter">SubscriptionsAPIFilter</a>, <a href="#eventing.knative.dev/v1.TriggerSpec">TriggerSpec</a>)
+(<em>Appears on:</em><a href="#eventing.knative.dev/v1.SubscriptionsAPIFilter">SubscriptionsAPIFilter</a>, <a href="#eventing.knative.dev/v1.TriggerSpec">TriggerSpec</a>, <a href="#eventing.knative.dev/v1beta1.EventTypeQuerySpec">EventTypeQuerySpec</a>)
 </p>
 <p>
 <p>SubscriptionsAPIFilter allows defining a filter expression using CloudEvents
@@ -2540,12 +2540,39 @@ EventTypeQuerySpec
 <table>
 <tr>
 <td>
-<code>CESQL</code><br/>
+<code>filters</code><br/>
 <em>
-string
+<a href="#eventing.knative.dev/v1.SubscriptionsAPIFilter">
+[]SubscriptionsAPIFilter
+</a>
 </em>
 </td>
 <td>
+</td>
+</tr>
+<tr>
+<td>
+<code>continuous</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>TODO immutable</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>subscriber</code><br/>
+<em>
+<a href="https://pkg.go.dev/knative.dev/pkg/apis/duck/v1#Destination">
+knative.dev/pkg/apis/duck/v1.Destination
+</a>
+</em>
+</td>
+<td>
+<p>TODO must be set when continuous=true
+Sink is a reference to an object that will resolve to a uri to use as the sink.</p>
 </td>
 </tr>
 </table>
@@ -2585,12 +2612,39 @@ This data may be out of date.</p>
 <tbody>
 <tr>
 <td>
-<code>CESQL</code><br/>
+<code>filters</code><br/>
 <em>
-string
+<a href="#eventing.knative.dev/v1.SubscriptionsAPIFilter">
+[]SubscriptionsAPIFilter
+</a>
 </em>
 </td>
 <td>
+</td>
+</tr>
+<tr>
+<td>
+<code>continuous</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>TODO immutable</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>subscriber</code><br/>
+<em>
+<a href="https://pkg.go.dev/knative.dev/pkg/apis/duck/v1#Destination">
+knative.dev/pkg/apis/duck/v1.Destination
+</a>
+</em>
+</td>
+<td>
+<p>TODO must be set when continuous=true
+Sink is a reference to an object that will resolve to a uri to use as the sink.</p>
 </td>
 </tr>
 </tbody>
@@ -2612,7 +2666,7 @@ string
 <tbody>
 <tr>
 <td>
-<code>EventTypes</code><br/>
+<code>eventTypes</code><br/>
 <em>
 <a href="https://pkg.go.dev/knative.dev/pkg/apis/duck/v1#KReference">
 []knative.dev/pkg/apis/duck/v1.KReference
@@ -2620,6 +2674,34 @@ string
 </em>
 </td>
 <td>
+</td>
+</tr>
+<tr>
+<td>
+<code>numEventTypes</code><br/>
+<em>
+int
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>Status</code><br/>
+<em>
+<a href="https://pkg.go.dev/knative.dev/pkg/apis/duck/v1#Status">
+knative.dev/pkg/apis/duck/v1.Status
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>Status</code> are embedded into this type.)
+</p>
+<p>inherits duck/v1 Status, which currently provides:
+* ObservedGeneration - the &lsquo;Generation&rsquo; of the Service that was last processed by the controller.
+* Conditions - the latest available observations of a resource&rsquo;s current state.</p>
 </td>
 </tr>
 </tbody>

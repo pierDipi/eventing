@@ -39,7 +39,7 @@ import (
 
 	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
-	broker "knative.dev/eventing/pkg/broker"
+	"knative.dev/eventing/pkg/broker"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 	"knative.dev/eventing/pkg/eventfilter"
 	"knative.dev/eventing/pkg/eventfilter/attributes"
@@ -428,7 +428,7 @@ func filterEvent(ctx context.Context, triggerSpec eventingv1.TriggerSpec, event 
 }
 
 func applySubscriptionsAPIFilters(ctx context.Context, filters []eventingv1.SubscriptionsAPIFilter, event cloudevents.Event) eventfilter.FilterResult {
-	return subscriptionsapi.NewAllFilter(materializeFiltersList(ctx, filters)...).Filter(ctx, event)
+	return subscriptionsapi.NewAllFilter(MaterializeFiltersList(ctx, filters)...).Filter(ctx, event)
 }
 
 func materializeSubscriptionsAPIFilter(ctx context.Context, filter eventingv1.SubscriptionsAPIFilter) eventfilter.Filter {
@@ -457,9 +457,9 @@ func materializeSubscriptionsAPIFilter(ctx context.Context, filter eventingv1.Su
 			return nil
 		}
 	case len(filter.All) > 0:
-		materializedFilter = subscriptionsapi.NewAllFilter(materializeFiltersList(ctx, filter.All)...)
+		materializedFilter = subscriptionsapi.NewAllFilter(MaterializeFiltersList(ctx, filter.All)...)
 	case len(filter.Any) > 0:
-		materializedFilter = subscriptionsapi.NewAnyFilter(materializeFiltersList(ctx, filter.Any)...)
+		materializedFilter = subscriptionsapi.NewAnyFilter(MaterializeFiltersList(ctx, filter.Any)...)
 	case filter.Not != nil:
 		materializedFilter = subscriptionsapi.NewNotFilter(materializeSubscriptionsAPIFilter(ctx, *filter.Not))
 	case filter.CESQL != "":
@@ -472,7 +472,7 @@ func materializeSubscriptionsAPIFilter(ctx context.Context, filter eventingv1.Su
 	return materializedFilter
 }
 
-func materializeFiltersList(ctx context.Context, filters []eventingv1.SubscriptionsAPIFilter) []eventfilter.Filter {
+func MaterializeFiltersList(ctx context.Context, filters []eventingv1.SubscriptionsAPIFilter) []eventfilter.Filter {
 	materializedFilters := make([]eventfilter.Filter, 0, len(filters))
 	for _, f := range filters {
 		f := materializeSubscriptionsAPIFilter(ctx, f)

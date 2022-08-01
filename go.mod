@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20210420163308-c1402a70e2f1
+	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20211221011931-643d94fcab96
 	github.com/cloudevents/conformance v0.2.0
 	github.com/cloudevents/sdk-go/observability/opencensus/v2 v2.12.0
 	github.com/cloudevents/sdk-go/sql/v2 v2.0.0-20220930150014-52b12276cc4a

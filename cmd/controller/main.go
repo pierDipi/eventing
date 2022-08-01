@@ -33,6 +33,7 @@ import (
 	"knative.dev/eventing/pkg/reconciler/channel"
 	"knative.dev/eventing/pkg/reconciler/containersource"
 	"knative.dev/eventing/pkg/reconciler/eventtype"
+	"knative.dev/eventing/pkg/reconciler/eventtypequery"
 	"knative.dev/eventing/pkg/reconciler/parallel"
 	"knative.dev/eventing/pkg/reconciler/pingsource"
 	"knative.dev/eventing/pkg/reconciler/sequence"
@@ -80,6 +81,7 @@ func main() {
 
 		// Eventing
 		eventtype.NewController,
+		eventtypequery.NewController,
 
 		// Flows
 		parallel.NewController,

@@ -27,6 +27,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/types"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmap "knative.dev/pkg/configmap/informer"
@@ -41,8 +42,9 @@ import (
 	tracingconfig "knative.dev/pkg/tracing/config"
 
 	cmdbroker "knative.dev/eventing/cmd/broker"
-	broker "knative.dev/eventing/pkg/broker"
+	"knative.dev/eventing/pkg/broker"
 	"knative.dev/eventing/pkg/broker/ingress"
+	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/reconciler/names"
@@ -139,12 +141,14 @@ func main() {
 	reporter := ingress.NewStatsReporter(env.ContainerName, kmeta.ChildName(env.PodName, uuid.New().String()))
 
 	h := &ingress.Handler{
-		Receiver:     kncloudevents.NewHTTPMessageReceiver(env.Port),
-		Sender:       sender,
-		Defaulter:    broker.TTLDefaulter(logger, int32(env.MaxTTL)),
-		Reporter:     reporter,
-		Logger:       logger,
-		BrokerLister: brokerLister,
+		Receiver:       kncloudevents.NewHTTPMessageReceiver(env.Port),
+		Sender:         sender,
+		Defaulter:      broker.TTLDefaulter(logger, int32(env.MaxTTL)),
+		Reporter:       reporter,
+		Logger:         logger,
+		BrokerLister:   brokerLister,
+		EventingClient: eventingclient.Get(ctx).EventingV1beta1(),
+		EventTypeCache: map[types.NamespacedName]struct{}{},
 	}
 
 	// configMapWatcher does not block, so start it first.
