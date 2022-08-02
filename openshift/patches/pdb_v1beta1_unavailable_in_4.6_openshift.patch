@@ -1,0 +1,13 @@
+diff --git a/config/core/deployments/webhook-hpa.yaml b/config/core/deployments/webhook-hpa.yaml
+index 562d12274..45811e552 100644
+--- a/config/core/deployments/webhook-hpa.yaml
++++ b/config/core/deployments/webhook-hpa.yaml
+@@ -38,7 +38,7 @@ spec:
+         averageUtilization: 100
+ ---
+ # Webhook PDB.
+-apiVersion: policy/v1
++apiVersion: policy/v1beta1
+ kind: PodDisruptionBudget
+ metadata:
+   name: eventing-webhook
