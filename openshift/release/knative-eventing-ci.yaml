@@ -3371,7 +3371,7 @@ spec:
       containers:
       - name: eventing-controller
         terminationMessagePolicy: FallbackToLogsOnError
-        image: registry.ci.openshift.org/openshift/knative-v1.6.0:knative-eventing-controller
+        image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-controller
         resources:
           requests:
             cpu: 100m
@@ -3388,7 +3388,7 @@ spec:
           - name: METRICS_DOMAIN
             value: knative.dev/eventing
           - name: APISERVER_RA_IMAGE
-            value: registry.ci.openshift.org/openshift/knative-v1.6.0:knative-eventing-apiserver-receive-adapter
+            value: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-apiserver-receive-adapter
           - name: POD_NAME
             valueFrom:
               fieldRef:
@@ -3442,7 +3442,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.6.0:knative-eventing-mtping
+          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-mtping
           env:
             - name: SYSTEM_NAMESPACE
               value: ''
@@ -3618,7 +3618,7 @@ spec:
       containers:
       - name: eventing-webhook
         terminationMessagePolicy: FallbackToLogsOnError
-        image: registry.ci.openshift.org/openshift/knative-v1.6.0:knative-eventing-webhook
+        image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-webhook
         resources:
           requests:
             cpu: 100m
@@ -3812,7 +3812,7 @@ spec:
         type: Utilization
         averageUtilization: 100
 ---
-apiVersion: policy/v1
+apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
   name: eventing-webhook
@@ -4009,7 +4009,7 @@ spec:
       enableServiceLinks: false
       containers:
       - name: controller
-        image: registry.ci.openshift.org/openshift/knative-v1.6.0:knative-eventing-channel-controller
+        image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-channel-controller
         env:
           - name: WEBHOOK_NAME
             value: inmemorychannel-webhook
@@ -4026,7 +4026,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: DISPATCHER_IMAGE
-            value: registry.ci.openshift.org/openshift/knative-v1.6.0:knative-eventing-channel-dispatcher
+            value: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-channel-dispatcher
           - name: POD_NAME
             valueFrom:
               fieldRef:
@@ -4144,7 +4144,7 @@ spec:
       enableServiceLinks: false
       containers:
       - name: dispatcher
-        image: registry.ci.openshift.org/openshift/knative-v1.6.0:knative-eventing-channel-dispatcher
+        image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-channel-dispatcher
         readinessProbe: &probe
           failureThreshold: 3
           httpGet:
