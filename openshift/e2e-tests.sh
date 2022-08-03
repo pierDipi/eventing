@@ -14,13 +14,7 @@ failed=0
 
 (( !failed )) && install_serverless || failed=1
 
-(( !failed )) && install_knative_eventing || failed=1
-
-(( !failed )) && install_tracing || failed=1
-
 (( !failed )) && run_e2e_tests || failed=1
-
-(( !failed )) && uninstall_knative_eventing || failed=1
 
 (( failed )) && dump_cluster_state
 

@@ -75,152 +75,28 @@ function timeout_non_zero() {
   return 0
 }
 
-function install_tracing {
-  deploy_zipkin
-  enable_eventing_tracing
-}
-
-function deploy_zipkin {
-  logger.info "Installing Zipkin in namespace ${ZIPKIN_NAMESPACE}"
-  cat <<EOF | oc apply -f - || return $?
-apiVersion: v1
-kind: Service
-metadata:
-  name: zipkin
-  namespace: ${ZIPKIN_NAMESPACE}
-spec:
-  type: NodePort
-  ports:
-  - name: http
-    port: 9411
-  selector:
-    app: zipkin
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: zipkin
-  namespace: ${ZIPKIN_NAMESPACE}
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: zipkin
-  template:
-    metadata:
-      labels:
-        app: zipkin
-      annotations:
-        sidecar.istio.io/inject: "false"
-    spec:
-      containers:
-      - name: zipkin
-        image: ghcr.io/openzipkin/zipkin:2
-        ports:
-        - containerPort: 9411
-        env:
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              apiVersion: v1
-              fieldPath: metadata.namespace
-        resources:
-          limits:
-            memory: 1000Mi
-          requests:
-            memory: 256Mi
----
-EOF
-
-  logger.info "Waiting until Zipkin is available"
-  kubectl wait deployment --all --timeout=600s --for=condition=Available -n ${ZIPKIN_NAMESPACE} || return 1
-}
-
-function enable_eventing_tracing {
-  logger.info "Configuring tracing for Eventing"
-
-  cat <<EOF | oc apply -f - || return $?
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: config-tracing
-  namespace: ${EVENTING_NAMESPACE}
-data:
-  enable: "true"
-  zipkin-endpoint: "http://zipkin.${ZIPKIN_NAMESPACE}.svc.cluster.local:9411/api/v2/spans"
-  sample-rate: "1.0"
-  debug: "true"
-EOF
-}
-
-function configure_sugar_controller_testing {
- oc apply -f test/config/sugar.yaml
-}
-
 function install_serverless(){
   header "Installing Serverless Operator"
+
+  KNATIVE_EVENTING_MANIFESTS_DIR="$(pwd)/openshift/release/artifacts"
+  export KNATIVE_EVENTING_MANIFESTS_DIR
+
   local operator_dir=/tmp/serverless-operator
-  local failed=0
   git clone --branch main https://github.com/openshift-knative/serverless-operator.git $operator_dir
-  # unset OPENSHIFT_BUILD_NAMESPACE (old CI) and OPENSHIFT_CI (new CI) as its used in serverless-operator's CI
-  # environment as a switch to use CI built images, we want pre-built images of k-s-o and k-o-i
-  unset OPENSHIFT_BUILD_NAMESPACE
-  unset OPENSHIFT_CI
-  pushd $operator_dir
-  INSTALL_EVENTING="false" ./hack/install.sh && header "Serverless Operator installed successfully" || failed=1
-  popd
+  export GOPATH=/tmp/go
+  local failed=0
+  pushd $operator_dir || return $?
+  export ON_CLUSTER_BUILDS=true
+  export DOCKER_REPO_OVERRIDE=image-registry.openshift-image-registry.svc:5000/openshift-marketplace
+  OPENSHIFT_CI="true" TRACING_BACKEND="zipkin" ENABLE_TRACING="true" make generated-files images install-tracing install-eventing || failed=$?
+  cat ${operator_dir}/olm-catalog/serverless-operator/manifests/serverless-operator.clusterserviceversion.yaml
+  popd || return $?
+
   return $failed
-}
-
-function install_knative_eventing(){
-  header "Installing Knative Eventing"
-
-  cat openshift/release/knative-eventing-ci.yaml > ci
-  cat openshift/release/knative-eventing-mtbroker-ci.yaml >> ci
-
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-controller|${KNATIVE_EVENTING_CONTROLLER}|g"                               ci
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-mtping|${KNATIVE_EVENTING_MTPING}|g"                                       ci
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-apiserver-receive-adapter|${KNATIVE_EVENTING_APISERVER_RECEIVE_ADAPTER}|g" ci
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-webhook|${KNATIVE_EVENTING_WEBHOOK}|g"                                     ci
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-channel-controller|${KNATIVE_EVENTING_CHANNEL_CONTROLLER}|g"               ci
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-channel-dispatcher|${KNATIVE_EVENTING_CHANNEL_DISPATCHER}|g"               ci
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-mtbroker-ingress|${KNATIVE_EVENTING_MTBROKER_INGRESS}|g"                   ci
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-mtbroker-filter|${KNATIVE_EVENTING_MTBROKER_FILTER}|g"                     ci
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-mtchannel-broker|${KNATIVE_EVENTING_MTCHANNEL_BROKER}|g"                   ci
-
-  oc apply -f ci || return 1
-  rm ci
-
-  # Wait for 5 pods to appear first
-  timeout_non_zero 900 '[[ $(oc get pods -n $EVENTING_NAMESPACE --no-headers | wc -l) -lt 5 ]]' || return 1
-  wait_until_pods_running $EVENTING_NAMESPACE || return 1
-
-  # Apply the testing config for the sugar controller
-  configure_sugar_controller_testing
-
-  # Assert that there are no images used that are not CI images (which should all be using the $INTERNAL_REGISTRY)
-  # (except for the knative-eventing-operator)
-  #oc get pod -n knative-eventing -o yaml | grep image: | grep -v knative-eventing-operator | grep -v ${INTERNAL_REGISTRY} && return 1 || true
-}
-
-function uninstall_knative_eventing(){
-  header "Uninstalling Knative Eventing"
-
-  cat openshift/release/knative-eventing-ci.yaml > ci
-  cat openshift/release/knative-eventing-mtbroker-ci.yaml >> ci
-
-  oc delete -f ci --ignore-not-found=true || return 1
-  rm ci
 }
 
 function run_e2e_rekt_tests(){
   header "Running E2E Reconciler Tests"
-  oc get ns ${SYSTEM_NAMESPACE} 2>/dev/null || SYSTEM_NAMESPACE="knative-eventing"
-  sed "s/namespace: ${KNATIVE_DEFAULT_NAMESPACE}/namespace: ${SYSTEM_NAMESPACE}/g" ${CONFIG_TRACING_CONFIG} | oc replace -f -
-
-  oc -n knative-eventing set env deployment/mt-broker-controller BROKER_INJECTION_DEFAULT=true || return 1
-  wait_until_pods_running $EVENTING_NAMESPACE || return 2
-
   echo "Replacing images used in Rekt test resources with the images built in CI"
 
   echo "Replacing knative-eventing-test-event-library image"
@@ -245,8 +121,6 @@ function run_e2e_rekt_tests(){
 
 function run_e2e_tests(){
   header "Running E2E tests with Multi Tenant Channel Based Broker"
-  oc get ns ${SYSTEM_NAMESPACE} 2>/dev/null || SYSTEM_NAMESPACE="knative-eventing"
-  sed "s/namespace: ${KNATIVE_DEFAULT_NAMESPACE}/namespace: ${SYSTEM_NAMESPACE}/g" ${CONFIG_TRACING_CONFIG} | oc replace -f -
   local test_name="${1:-}"
   local run_command=""
   local failed=0
@@ -257,9 +131,6 @@ function run_e2e_tests(){
   if [ -n "$test_name" ]; then
       local run_command="-run ^(${test_name})$"
   fi
-
-  oc -n knative-eventing set env deployment/mt-broker-controller BROKER_INJECTION_DEFAULT=true || return 1
-  wait_until_pods_running $EVENTING_NAMESPACE || return 2
 
   go_test_e2e -timeout=50m -parallel=20 ./test/e2e \
     "$run_command" \
@@ -272,8 +143,6 @@ function run_e2e_tests(){
 
 function run_conformance_tests(){
   header "Running Conformance tests with Multi Tenant Channel Based Broker"
-  oc get ns ${SYSTEM_NAMESPACE} 2>/dev/null || SYSTEM_NAMESPACE="knative-eventing"
-  sed "s/namespace: ${KNATIVE_DEFAULT_NAMESPACE}/namespace: ${SYSTEM_NAMESPACE}/g" ${CONFIG_TRACING_CONFIG} | oc replace -f -
   local test_name="${1:-}"
   local run_command=""
   local failed=0
@@ -284,9 +153,6 @@ function run_conformance_tests(){
   if [ -n "$test_name" ]; then
       local run_command="-run ^(${test_name})$"
   fi
-
-  oc -n knative-eventing set env deployment/mt-broker-controller BROKER_INJECTION_DEFAULT=true || return 1
-  wait_until_pods_running $EVENTING_NAMESPACE || return 2
 
   go_test_e2e -timeout=30m -parallel=12 ./test/conformance \
     "$run_command" \
