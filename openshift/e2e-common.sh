@@ -82,8 +82,7 @@ function install_serverless(){
   export KNATIVE_EVENTING_MANIFESTS_DIR
 
   local operator_dir=/tmp/serverless-operator
-  # TODO(pierdipi) temporary hack, move to the correct repository once https://github.com/openshift-knative/serverless-operator/pull/1665/commits/dd0db2e060963f4a8bb4b8829f18c6376712c32d is in
-  git clone --branch bump-eventing-v1.4 https://github.com/pierdipi/serverless-operator.git $operator_dir
+  git clone --branch main https://github.com/openshift-knative/serverless-operator.git $operator_dir
   export GOPATH=/tmp/go
   local failed=0
   pushd $operator_dir || return $?
