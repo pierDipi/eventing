@@ -19,3 +19,8 @@ function generate_dockefiles() {
 }
 
 generate_dockefiles $@
+
+# shellcheck disable=SC2002
+go_version=$(grep "^go.*" "go.mod" | awk '{print $2}')
+
+sed -i "s|registry.ci.openshift.org/openshift/release:golang.*|registry.ci.openshift.org/openshift/release:golang-${go_version}|g" openshift/ci-operator/build-image/Dockerfile
