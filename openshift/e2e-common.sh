@@ -82,7 +82,7 @@ function install_serverless(){
   export KNATIVE_EVENTING_MANIFESTS_DIR
 
   local operator_dir=/tmp/serverless-operator
-  git clone --branch main https://github.com/openshift-knative/serverless-operator.git $operator_dir
+  git clone --branch release-1.26 https://github.com/openshift-knative/serverless-operator.git $operator_dir
   export GOPATH=/tmp/go
   local failed=0
   pushd $operator_dir || return $?
