@@ -38,7 +38,8 @@ func (p *EventTypeQuery) GetConditionSet() apis.ConditionSet {
 
 func (p *EventTypeQuery) MarkEventTypesListed() {
 	p.GetConditionSet().Manage(p.GetStatus()).MarkTrue(ConditionEventTypesListed)
-	p.Status.NumEventTypes = len(p.Status.EventTypes)
+	n := len(p.Status.EventTypes)
+	p.Status.NumEventTypes = &n
 }
 
 func (p *EventTypeQuery) MarkTriggersReconciledNoContinuous() {

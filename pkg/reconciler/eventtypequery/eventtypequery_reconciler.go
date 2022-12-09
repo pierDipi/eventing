@@ -77,7 +77,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, query *eventing.EventTyp
 
 		match := filters.Filter(ctx, event)
 
-		if match == eventfilter.NoFilter || match == eventfilter.PassFilter {
+		if match == eventfilter.PassFilter {
 			query.Status.EventTypes = append(query.Status.EventTypes, duckv1.KReference{
 				APIVersion: eventType.TypeMeta.APIVersion,
 				Kind:       eventType.TypeMeta.Kind,

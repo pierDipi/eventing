@@ -36,6 +36,36 @@ spec:
       kind: Broker
       name: discovery-broker
 ---
+apiVersion: sources.knative.dev/v1
+kind: PingSource
+metadata:
+  name: ping-source-hello-discovery
+  namespace: discovery-demo
+spec:
+  schedule: "*/1 * * * *"
+  contentType: "application/json"
+  data: '{"message": "Hello Discovery!"}'
+  sink:
+    ref:
+      apiVersion: eventing.knative.dev/v1
+      kind: Broker
+      name: discovery-broker-2
+---
+apiVersion: sources.knative.dev/v1
+kind: PingSource
+metadata:
+  name: ping-source-hello-brno
+  namespace: discovery-demo
+spec:
+  schedule: "*/1 * * * *"
+  contentType: "application/json"
+  data: '{"message": "Hello Brno!"}'
+  sink:
+    ref:
+      apiVersion: eventing.knative.dev/v1
+      kind: Broker
+      name: discovery-broker-3
+---
 apiVersion: v1
 kind: Service
 metadata:

@@ -64,7 +64,7 @@ type EventTypeQuerySpec struct {
 
 type EventTypeQueryStatus struct {
 	EventTypes    []duckv1.KReference `json:"eventTypes,omitempty"`
-	NumEventTypes int                 `json:"numEventTypes"`
+	NumEventTypes *int                `json:"numEventTypes,omitempty"`
 
 	// inherits duck/v1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
