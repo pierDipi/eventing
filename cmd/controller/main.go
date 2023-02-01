@@ -20,16 +20,21 @@ import (
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
+	"context"
 	"errors"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
+	"knative.dev/pkg/configmap"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/sharedmain"
 	"knative.dev/pkg/signals"
 
+	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/pkg/reconciler/apiserversource"
+	"knative.dev/eventing/pkg/reconciler/brokerrole"
 	"knative.dev/eventing/pkg/reconciler/channel"
 	"knative.dev/eventing/pkg/reconciler/containersource"
 	"knative.dev/eventing/pkg/reconciler/eventtype"
@@ -95,6 +100,10 @@ func main() {
 		// Sugar
 		sugarnamespace.NewController,
 		sugartrigger.NewController,
+
+		func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
+			return brokerrole.NewController(ctx, watcher, eventing.MTChannelBrokerClassValue)
+		},
 	)
 }
 

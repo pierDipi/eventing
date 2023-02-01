@@ -21,10 +21,16 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
+
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
+)
+
+const (
+	AuthenticationAnnotation             = "authentication"
+	AuthenticationEnabledAnnotationValue = "true"
 )
 
 // +genclient

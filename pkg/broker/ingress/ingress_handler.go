@@ -32,11 +32,11 @@ import (
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/types"
-
 	"knative.dev/pkg/network"
 
 	"knative.dev/eventing/pkg/apis/eventing"
 	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/authorizer"
 	"knative.dev/eventing/pkg/broker"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 	"knative.dev/eventing/pkg/kncloudevents"
@@ -50,6 +50,7 @@ const (
 )
 
 type Handler struct {
+	Authorizer authorizer.Authorizer
 	// Receiver receives incoming HTTP requests
 	Receiver *kncloudevents.HTTPMessageReceiver
 	// Sender sends requests to the broker
@@ -128,7 +129,25 @@ func (h *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	brokerNamespace := nsBrokerName[1]
+	brokerName := nsBrokerName[2]
+	brokerNamespacedName := types.NamespacedName{
+		Name:      brokerName,
+		Namespace: brokerNamespace,
+	}
+
 	ctx := request.Context()
+
+	br, err := h.BrokerLister.Brokers(brokerNamespace).Get(brokerName)
+	if err != nil {
+		h.Logger.Error("failed to get Broker %s: %w", zap.String("broker", brokerNamespacedName.String()), zap.Error(err))
+		writer.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	if !h.isAuthorized(request, writer, br) {
+		return
+	}
 
 	message := cehttp.NewMessageFromHttpRequest(request)
 	defer message.Finish(nil)
@@ -146,13 +165,6 @@ func (h *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		h.Logger.Warn("failed to validate extracted event", zap.Error(validationErr))
 		writer.WriteHeader(http.StatusBadRequest)
 		return
-	}
-
-	brokerNamespace := nsBrokerName[1]
-	brokerName := nsBrokerName[2]
-	brokerNamespacedName := types.NamespacedName{
-		Name:      brokerName,
-		Namespace: brokerNamespace,
 	}
 
 	ctx, span := trace.StartSpan(ctx, tracing.BrokerMessagingDestination(brokerNamespacedName))
@@ -181,6 +193,40 @@ func (h *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	_ = h.Reporter.ReportEventCount(reporterArgs, statusCode)
 
 	writer.WriteHeader(statusCode)
+}
+
+func (h *Handler) isAuthorized(req *http.Request, writer http.ResponseWriter, br *eventingv1.Broker) bool {
+	if v, ok := br.Annotations[eventingv1.AuthenticationAnnotation]; !ok || v != eventingv1.AuthenticationEnabledAnnotationValue {
+		return true
+	}
+
+	authReq := &authorizer.AuthorizationRequest{
+		Action: authorizer.Action{
+			Verb:        authorizer.VerbPostEvent,
+			Description: "POST event",
+		},
+		Req:    req,
+		Object: br,
+	}
+
+	response, err := h.Authorizer.Authorize(req.Context(), authReq)
+	if err != nil {
+		h.Logger.Error("Failed to authorize request", zap.Error(err))
+		writer.WriteHeader(http.StatusInternalServerError)
+		return false
+	}
+	if !response.Authenticated {
+		h.Logger.Error("Failed to authenticate request", zap.Error(response.Error))
+		writer.WriteHeader(http.StatusUnauthorized)
+		return false
+	}
+	if !response.Authorized {
+		h.Logger.Error("Failed to authorize request", zap.Error(response.Error))
+		writer.WriteHeader(http.StatusForbidden)
+		return false
+	}
+
+	return true
 }
 
 func (h *Handler) receive(ctx context.Context, headers http.Header, event *cloudevents.Event, brokerNamespace, brokerName string) (int, time.Duration) {

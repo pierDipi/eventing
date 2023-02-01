@@ -41,7 +41,8 @@ import (
 	tracingconfig "knative.dev/pkg/tracing/config"
 
 	cmdbroker "knative.dev/eventing/cmd/broker"
-	broker "knative.dev/eventing/pkg/broker"
+	"knative.dev/eventing/pkg/authorizer"
+	"knative.dev/eventing/pkg/broker"
 	"knative.dev/eventing/pkg/broker/ingress"
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	"knative.dev/eventing/pkg/kncloudevents"
@@ -139,6 +140,10 @@ func main() {
 	reporter := ingress.NewStatsReporter(env.ContainerName, kmeta.ChildName(env.PodName, uuid.New().String()))
 
 	h := &ingress.Handler{
+		Authorizer: &authorizer.BearerTokenAuthorizer{
+			ResourceAttributesProvider: authorizer.BrokerResourceAttributesProvider(),
+			K8s:                        kubeclient.Get(ctx),
+		},
 		Receiver:     kncloudevents.NewHTTPMessageReceiver(env.Port),
 		Sender:       sender,
 		Defaulter:    broker.TTLDefaulter(logger, int32(env.MaxTTL)),
