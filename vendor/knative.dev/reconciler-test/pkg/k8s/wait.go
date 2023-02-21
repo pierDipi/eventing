@@ -493,5 +493,22 @@ func countEndpointsNum(e *corev1.Endpoints) int {
 
 // podRunning will check the status conditions of the pod and return true if it's Running.
 func podRunning(pod *corev1.Pod) bool {
-	return pod.Status.Phase == corev1.PodRunning || pod.Status.Phase == corev1.PodSucceeded
+	// Some pods might terminate before we actually check for them to be running, this is fine
+	// for rekt tests pods.
+	if pod.Status.Phase == corev1.PodSucceeded {
+		return true
+	}
+	// Pods that are not in running phase are not ready
+	if pod.Status.Phase != corev1.PodRunning {
+		return false
+	}
+
+	// Pods in running phase is not enough to check for pod readiness, so check
+	// the ready condition.
+	for _, c := range pod.Status.Conditions {
+		if c.Type == corev1.PodReady && c.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+	return false
 }
