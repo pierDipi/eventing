@@ -60,6 +60,10 @@ spec:
         httpGet:
           port: 8080
           path: /health/ready
+        timeoutSeconds: 3
+        failureThreshold: 30
+        periodSeconds: 2
+        successThreshold: 1
       {{ end }}
       env:
         - name: "SYSTEM_NAMESPACE"
