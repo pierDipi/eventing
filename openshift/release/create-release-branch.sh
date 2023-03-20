@@ -21,7 +21,6 @@ git checkout openshift/main -- .github/workflows openshift OWNERS_ALIASES OWNERS
 tag=${release/release-/}
 yq write --inplace openshift/project.yaml project.tag "knative-$tag"
 
-make generate-dockerfiles
 make generate-release
 
 git add .github/workflows openshift OWNERS_ALIASES OWNERS Makefile

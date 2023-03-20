@@ -37,7 +37,7 @@ All remaining steps must be done **on the release branch**.
 On the release branch, build the images and docker files.
 
 ```
-make install && make generate-dockerfiles
+make install && make generate-release
 ```
 
 If any are new/changed, check them in.
