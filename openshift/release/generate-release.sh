@@ -4,6 +4,8 @@ source $(dirname $0)/resolve.sh
 
 release=$1
 
+./openshift/generate.sh
+
 artifacts_dir="openshift/release/artifacts"
 rm -rf $artifacts_dir
 mkdir -p $artifacts_dir

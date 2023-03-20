@@ -1,12 +1,16 @@
-# Do not edit! This file was generated via Makefile
+# DO NOT EDIT! Generated Dockerfile for test/test_images/event-library.
 FROM registry.ci.openshift.org/openshift/release:golang-1.18 as builder
 
 COPY . .
-RUN make install test-install
 
-FROM openshift/origin-base
+RUN mkdir -p /var/run/ko && \
+    mkdir -p test/test_images/event-library/kodata && \
+    go build -o /usr/bin/main ./test/test_images/event-library && \
+    cp -r test/test_images/event-library/kodata /var/run/ko
+
+FROM registry.access.redhat.com/ubi8/ubi-minimal
 USER 65532
 
-COPY ./test/test_images/event-library/kodata /var/run/ko
-COPY --from=builder /go/bin/event-library /usr/bin/event-library
-ENTRYPOINT ["/usr/bin/event-library"]
+COPY --from=builder /usr/bin/main /usr/bin/main
+COPY --from=builder /var/run/ko /var/run/ko
+ENTRYPOINT ["/usr/bin/main"]

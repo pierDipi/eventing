@@ -1,12 +1,16 @@
-# Do not edit! This file was generated via Makefile
+# DO NOT EDIT! Generated Dockerfile for cmd/webhook.
 FROM registry.ci.openshift.org/openshift/release:golang-1.18 as builder
 
 COPY . .
-RUN make install test-install
 
-FROM openshift/origin-base
+RUN mkdir -p /var/run/ko && \
+    mkdir -p cmd/webhook/kodata && \
+    go build -o /usr/bin/main ./cmd/webhook && \
+    cp -r cmd/webhook/kodata /var/run/ko
+
+FROM registry.access.redhat.com/ubi8/ubi-minimal
 USER 65532
 
-COPY ./cmd/webhook/kodata /var/run/ko
-COPY --from=builder /go/bin/webhook /usr/bin/webhook
-ENTRYPOINT ["/usr/bin/webhook"]
+COPY --from=builder /usr/bin/main /usr/bin/main
+COPY --from=builder /var/run/ko /var/run/ko
+ENTRYPOINT ["/usr/bin/main"]

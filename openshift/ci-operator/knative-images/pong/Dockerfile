@@ -1,12 +1,16 @@
-# Do not edit! This file was generated via Makefile
+# DO NOT EDIT! Generated Dockerfile for cmd/pong.
 FROM registry.ci.openshift.org/openshift/release:golang-1.18 as builder
 
 COPY . .
-RUN make install test-install
 
-FROM openshift/origin-base
+RUN mkdir -p /var/run/ko && \
+    mkdir -p cmd/pong/kodata && \
+    go build -o /usr/bin/main ./cmd/pong && \
+    cp -r cmd/pong/kodata /var/run/ko
+
+FROM registry.access.redhat.com/ubi8/ubi-minimal
 USER 65532
 
-COPY ./cmd/pong/kodata /var/run/ko
-COPY --from=builder /go/bin/pong /usr/bin/pong
-ENTRYPOINT ["/usr/bin/pong"]
+COPY --from=builder /usr/bin/main /usr/bin/main
+COPY --from=builder /var/run/ko /var/run/ko
+ENTRYPOINT ["/usr/bin/main"]
