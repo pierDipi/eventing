@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-source "$(dirname "$0")/common.sh"
-
 if [[ -n "${ARTIFACT_DIR:-}" ]]; then
   BUILD_NUMBER=${BUILD_NUMBER:-$(head -c 128 < /dev/urandom | base64 | fold -w 8 | head -n 1)}
   ARTIFACTS="${ARTIFACT_DIR}/build-${BUILD_NUMBER}"
@@ -101,7 +99,8 @@ function run_e2e_rekt_tests(){
   header "Running E2E Reconciler Tests"
   
   images_file=$(dirname $(realpath "$0"))/images.yaml
-  update_image_resolver_file ${images_file}
+  make generate-release
+  cat "${images_file}"
 
   local test_name="${1:-}"
   local run_command=""
