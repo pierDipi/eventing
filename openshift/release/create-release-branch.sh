@@ -18,8 +18,12 @@ git commit -sm ":fire: remove unneeded workflows" .github/
 # Copy the openshift extra files from the OPENSHIFT/main branch.
 git fetch openshift main
 git checkout openshift/main -- .github/workflows openshift OWNERS_ALIASES OWNERS Makefile
+tag=${release/release-/}
+yq write --inplace openshift/project.yaml project.tag "knative-$tag"
+
 make generate-dockerfiles
-make RELEASE=$release generate-release
+make generate-release
+
 git add .github/workflows openshift OWNERS_ALIASES OWNERS Makefile
 git commit -m "Add openshift specific files."
 
@@ -34,5 +38,5 @@ fi
 # Apply patches and also add new files, created by the patches
 git apply --index $PATCH_DIR/*
 
-make RELEASE=$release generate-release
+make generate-release
 git commit -am ":fire: Apply carried patches."

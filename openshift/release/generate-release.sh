@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 
-source $(dirname $0)/../common.sh
 source $(dirname $0)/resolve.sh
 
-release=$1
+release=$(yq r openshift/project.yaml project.tag)
+release=${release/knative-/}
+
+echo "Release: $release"
+
+./openshift/generate.sh
 
 artifacts_dir="openshift/release/artifacts"
 rm -rf $artifacts_dir
@@ -15,13 +19,8 @@ rm -rf config/channels/in-memory-channel/100-namespace.yaml
 rm -rf config/brokers/mt-channel-broker/deployments/hpa.yaml
 rm -rf config/brokers/mt-channel-broker/hpa.yaml
 
-if [ "$release" == "ci" ]; then
-    image_prefix="registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-"
-    tag=""
-else
-    image_prefix="registry.ci.openshift.org/openshift/knative-${release}:knative-eventing-"
-    tag=""
-fi
+image_prefix="registry.ci.openshift.org/openshift/knative-${release}:knative-eventing-"
+tag=""
 
 eventing_core="${artifacts_dir}/eventing-core.yaml"
 eventing_crds="${artifacts_dir}/eventing-crds.yaml"
@@ -44,6 +43,3 @@ resolve_resources config/channels/in-memory-channel/roles "${in_memory_channel}"
 resolve_resources config/channels/in-memory-channel/webhooks "${in_memory_channel}" "$image_prefix" "$tag"
 # MT Broker
 resolve_resources config/brokers/mt-channel-broker "${mt_channel_broker}" "$image_prefix" "$tag"
-
-images_file=$(dirname $(realpath "$0"))/../images.yaml
-update_image_resolver_file ${images_file} ${release}

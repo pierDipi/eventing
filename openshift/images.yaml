@@ -1,3 +1,0 @@
-knative.dev/eventing/test/test_images/print: registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-test-print
-knative.dev/eventing/cmd/heartbeats: registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-test-heartbeats
-knative.dev/reconciler-test/cmd/eventshub: registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-test-eventshub

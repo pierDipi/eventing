@@ -24,7 +24,7 @@ git commit -sm ":fire: remove unneeded workflows" .github/
 git fetch openshift main
 git checkout openshift/main openshift OWNERS_ALIASES OWNERS Makefile
 make generate-dockerfiles
-make RELEASE=ci generate-release
+make generate-release
 git add openshift OWNERS_ALIASES OWNERS Makefile
 git commit -m ":open_file_folder: Update openshift specific files."
 
@@ -36,7 +36,7 @@ do
  git apply --index -v $p
 done
 
-make RELEASE=ci generate-release
+make generate-release
 git commit -am ":fire: Apply carried patches."
 
 git push -f openshift ${REPO_BRANCH}
