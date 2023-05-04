@@ -40,6 +40,9 @@ import (
 	"knative.dev/eventing/pkg/reconciler/subscription"
 	sugarnamespace "knative.dev/eventing/pkg/reconciler/sugar/namespace"
 	sugartrigger "knative.dev/eventing/pkg/reconciler/sugar/trigger"
+
+	istiofilteredfactory "knative.dev/eventing-istio/pkg/client/istio/injection/informers/factory/filtered"
+	"knative.dev/eventing-istio/pkg/reconciler/service"
 )
 
 func main() {
@@ -73,6 +76,8 @@ func main() {
 		}
 	}()
 
+	ctx = istiofilteredfactory.WithSelectors(ctx, service.IstioResourceSelector)
+
 	sharedmain.MainWithContext(ctx, "controller",
 		// Messaging
 		channel.NewController,
@@ -95,6 +100,8 @@ func main() {
 		// Sugar
 		sugarnamespace.NewController,
 		sugartrigger.NewController,
+
+		service.NewController,
 	)
 }
 
