@@ -4,7 +4,7 @@ source $(dirname $0)/resolve.sh
 
 release=$1
 
-./openshift/generate.sh
+./openshift/generate.sh || exit 1
 
 artifacts_dir="openshift/release/artifacts"
 rm -rf $artifacts_dir
@@ -16,13 +16,10 @@ rm -rf config/channels/in-memory-channel/100-namespace.yaml
 rm -rf config/brokers/mt-channel-broker/deployments/hpa.yaml
 rm -rf config/brokers/mt-channel-broker/hpa.yaml
 
-if [ "$release" == "ci" ]; then
-    image_prefix="registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-"
-    tag=""
-else
-    image_prefix="registry.ci.openshift.org/openshift/knative-${release}:knative-eventing-"
-    tag=""
-fi
+release=$(yq r openshift/project.yaml project.tag)
+release=${release/knative-/}
+image_prefix="registry.ci.openshift.org/openshift/knative-${release}:knative-eventing-"
+tag=""
 
 eventing_core="${artifacts_dir}/eventing-core.yaml"
 eventing_crds="${artifacts_dir}/eventing-crds.yaml"

@@ -1,0 +1,13 @@
+diff --git a/vendor/knative.dev/reconciler-test/pkg/eventshub/103-pod.yaml b/vendor/knative.dev/reconciler-test/pkg/eventshub/103-pod.yaml
+index 2b8ad28d3..e34319f57 100644
+--- a/vendor/knative.dev/reconciler-test/pkg/eventshub/103-pod.yaml
++++ b/vendor/knative.dev/reconciler-test/pkg/eventshub/103-pod.yaml
+@@ -47,7 +47,7 @@ spec:
+           {{ end }}
+         allowPrivilegeEscalation: {{ .containerSecurityContext.allowPrivilegeEscalation }}
+       {{ end }}
+-      image: {{ .image }}
++      image: registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-test-eventshub
+       imagePullPolicy: "IfNotPresent"
+       {{ if .withReadiness }}
+       readinessProbe:
