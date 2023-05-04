@@ -10,6 +10,13 @@ git apply "${repo_root_dir}/openshift/patches/018-rekt-test-override-kopublish.p
 git apply "${repo_root_dir}/openshift/patches/018-rekt-test-image-pod.patch"
 git apply "${repo_root_dir}/openshift/patches/020-mutemetrics.patch"
 
+# Point eventing-istio to our fork
+release=$(yq r openshift/project.yaml project.tag)
+release=${release/knative/release}
+go mod edit -replace knative.dev/eventing-istio=github.com/openshift-knative/eventing-istio@"${release}"
+# After editing the dependency to point to the fork, we need re-align Go mod and vendor
+"${repo_root_dir}/hack/update-deps.sh" || exit 1
+
 GO111MODULE=off go get -u github.com/openshift-knative/hack/cmd/generate
 
 generate \
