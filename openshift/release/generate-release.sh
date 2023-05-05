@@ -27,9 +27,13 @@ in_memory_channel="${artifacts_dir}/in-memory-channel.yaml"
 mt_channel_broker="${artifacts_dir}/mt-channel-broker.yaml"
 eventing_post_install="${artifacts_dir}/eventing-post-install.yaml"
 
+eventing_istio_directory=openshift/release/eventing-istio
+wget -O "${eventing_istio_directory}/100-controller-clusterroles.yaml" https://raw.githubusercontent.com/openshift-knative/eventing-istio/release-"${release}"/config/eventing-istio/roles/controller-clusterroles.yaml
+
 # Eventing CRDs
 resolve_resources config/core/resources "${eventing_crds}" "$image_prefix" "$tag"
 # Eventing core
+resolve_resources "${eventing_istio_directory}" "${eventing_core}" "$image_prefix" "$tag"
 resolve_resources config "${eventing_core}" "$image_prefix" "$tag"
 # Eventing post-install
 resolve_resources config/post-install "${eventing_post_install}" "$image_prefix" "$tag"

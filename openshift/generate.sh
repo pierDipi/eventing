@@ -14,6 +14,9 @@ git apply "${repo_root_dir}/openshift/patches/020-mutemetrics.patch"
 release=$(yq r openshift/project.yaml project.tag)
 release=${release/knative/release}
 go mod edit -replace knative.dev/eventing-istio=github.com/openshift-knative/eventing-istio@"${release}"
+go mod tidy
+go get knative.dev/pkg@"${release/v/}"
+go get knative.dev/hack@"${release/v/}"
 # After editing the dependency to point to the fork, we need re-align Go mod and vendor
 "${repo_root_dir}/hack/update-deps.sh" || exit 1
 
