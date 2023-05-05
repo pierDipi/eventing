@@ -20,11 +20,11 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"knative.dev/pkg/test/prow"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
+	"knative.dev/eventing/test/prow"
 )
 
 var (

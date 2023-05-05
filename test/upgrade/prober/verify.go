@@ -36,9 +36,9 @@ import (
 	pkgTest "knative.dev/pkg/test"
 	"knative.dev/pkg/test/helpers"
 	"knative.dev/pkg/test/logging"
-	"knative.dev/pkg/test/prow"
 	"knative.dev/pkg/test/zipkin"
 
+	"knative.dev/eventing/test/prow"
 	"knative.dev/eventing/test/upgrade/prober/wathola/event"
 	"knative.dev/eventing/test/upgrade/prober/wathola/fetcher"
 	"knative.dev/eventing/test/upgrade/prober/wathola/receiver"

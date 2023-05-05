@@ -32,7 +32,8 @@ import (
 	pkgtest "knative.dev/pkg/test"
 	"knative.dev/pkg/test/helpers"
 	"knative.dev/pkg/test/logstream/v2"
-	"knative.dev/pkg/test/prow"
+
+	"knative.dev/eventing/test/prow"
 )
 
 func (c *Client) ExportLogs(dir string) error {
