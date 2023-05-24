@@ -23,6 +23,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 func TestContainerSourceDefaults(t *testing.T) {
@@ -52,6 +53,62 @@ func TestContainerSourceDefaults(t *testing.T) {
 					Namespace: "test-namespace",
 				},
 				Spec: ContainerSourceSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{{
+								Name:  "test-name-0",
+								Image: "test-image",
+							}},
+						},
+					},
+				},
+			},
+		},
+		"default sink": {
+			initial: ContainerSource{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-name",
+					Namespace: "test-namespace",
+				},
+				Spec: ContainerSourceSpec{
+					SourceSpec: duckv1.SourceSpec{
+						Sink: duckv1.Destination{
+							Ref: &duckv1.KReference{
+								Kind:       "Service",
+								Namespace:  "",
+								Name:       "svc",
+								APIVersion: "v1",
+							},
+							URI: nil,
+						},
+					},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{{
+								Name:  "test-name-0",
+								Image: "test-image",
+							}},
+						},
+					},
+				},
+			},
+			expected: ContainerSource{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-name",
+					Namespace: "test-namespace",
+				},
+				Spec: ContainerSourceSpec{
+					SourceSpec: duckv1.SourceSpec{
+						Sink: duckv1.Destination{
+							Ref: &duckv1.KReference{
+								Kind:       "Service",
+								Namespace:  "test-namespace",
+								Name:       "svc",
+								APIVersion: "v1",
+							},
+							URI: nil,
+						},
+					},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{{

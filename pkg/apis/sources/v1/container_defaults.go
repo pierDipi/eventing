@@ -39,4 +39,6 @@ func (ss *ContainerSourceSpec) SetDefaults(ctx context.Context) {
 		containers = append(containers, c)
 	}
 	ss.Template.Spec.Containers = containers
+
+	ss.SourceSpec.Sink.SetDefaults(ctx)
 }
