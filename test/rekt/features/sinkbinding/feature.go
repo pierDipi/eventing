@@ -124,38 +124,41 @@ func SinkBindingV1DeploymentTLS(ctx context.Context) *feature.Feature {
 	sbinding := feature.MakeRandomK8sName("sinkbinding")
 	sink := feature.MakeRandomK8sName("sink")
 	subject := feature.MakeRandomK8sName("subject")
+	extensionSecret := string(uuid.NewUUID())
 
-	f := feature.NewFeatureNamed("SinkBinding V1 Deployment test with TLS")
+	f := feature.NewFeatureNamed("SinkBinding V1 Deployment test")
 
+	env := environment.FromContext(ctx)
 	f.Setup("install sink", eventshub.Install(sink, eventshub.StartReceiverTLS))
-	
 	f.Setup("install a deployment", deployment.Install(subject, heartbeatsImage,
 		deployment.WithEnvs(map[string]string{
 			"POD_NAME":      "heartbeats",
 			"POD_NAMESPACE": env.Namespace(),
 		})))
+
 	extensions := map[string]string{
 		"sinkbinding": extensionSecret,
 	}
+
 	cfg := []manifest.CfgFn{
 		sinkbinding.WithExtensions(extensions),
-		deployment.AsTrackerReference(subject),
 	}
 
 	f.Requirement("install SinkBinding", func(ctx context.Context, t feature.T) {
 		d := service.AsDestinationRef(sink)
 		d.CACerts = eventshub.GetCaCerts(ctx)
-
-		cfg = append(cfg, sinkbinding.WithSink(d))
-		sinkbinding.Install(sbinding, cfg...)(ctx, t)
+		sinkbinding.Install(sbinding, d, deployment.AsTrackerReference(subject), cfg...)(ctx, t)
 	})
 	f.Requirement("SinkBinding goes ready", sinkbinding.IsReady(sbinding))
-	f.Stable("SinkBinding as event source").
-		Must("delivers events on sink with ref",
+
+	f.Stable("Create a deployment as sinkbinding's subject").
+		Must("delivers events",
 			eventasssert.OnStore(sink).
 				Match(eventasssert.MatchKind(eventshub.EventReceived)).
+				MatchEvent(test.HasExtension("sinkbinding", extensionSecret)).
 				AtLeast(1),
 		)
+
 	return f
 }
 
