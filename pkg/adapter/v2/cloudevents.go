@@ -36,6 +36,7 @@ import (
 	"knative.dev/pkg/tracing/propagation/tracecontextb3"
 
 	"knative.dev/eventing/pkg/adapter/v2/util/crstatusevent"
+	"knative.dev/eventing/pkg/apis"
 	"knative.dev/eventing/pkg/metrics/source"
 	obsclient "knative.dev/eventing/pkg/observability/client"
 )
@@ -152,6 +153,8 @@ func NewClient(cfg ClientConfig) (Client, error) {
 				return nil, err
 			}
 		}
+
+		pOpts = append(pOpts, http.WithHeader(apis.KnNamespaceHeader, cfg.Env.GetNamespace()))
 	}
 
 	pOpts = append(pOpts, http.WithRoundTripper(transport))
