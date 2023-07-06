@@ -1,5 +1,5 @@
 # DO NOT EDIT! Generated Dockerfile for test/test_images/event-library.
-FROM registry.ci.openshift.org/openshift/release:golang-1.18 as builder
+FROM registry.ci.openshift.org/openshift/release:golang-1.19 as builder
 
 COPY . .
 
