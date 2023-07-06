@@ -142,7 +142,7 @@ func TestNewCloudEventsClient_send(t *testing.T) {
 				}
 			}
 
-			defer func(restoreHTTP func(topt []http.Option, copt []v2client.Option) (v2client.Client, error), restoreEnv string, setEnv bool) {
+			defer func(restoreHTTP func(topt []http.Option, copt []v2client.Option) (Client, error), restoreEnv string, setEnv bool) {
 				newClientHTTPObserved = restoreHTTP
 				if setEnv {
 					if err := os.Setenv("K_SINK_TIMEOUT", restoreEnv); err != nil {
@@ -157,7 +157,7 @@ func TestNewCloudEventsClient_send(t *testing.T) {
 			}(restoreHTTP, restoreEnv, setEnv)
 
 			sendOptions := []http.Option{}
-			newClientHTTPObserved = func(topt []http.Option, copt []v2client.Option) (v2client.Client, error) {
+			newClientHTTPObserved = func(topt []http.Option, copt []v2client.Option) (Client, error) {
 				sendOptions = append(sendOptions, topt...)
 				return nil, nil
 			}
