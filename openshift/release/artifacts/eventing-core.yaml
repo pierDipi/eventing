@@ -17,7 +17,7 @@ kind: Namespace
 metadata:
   name: knative-eventing
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 ---
 # Copyright 2019 The Knative Authors
@@ -40,7 +40,7 @@ kind: ClusterRole
 metadata:
   name: addressable-resolver
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 aggregationRule:
   clusterRoleSelectors:
@@ -56,7 +56,7 @@ metadata:
   name: service-addressable-resolver
   labels:
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -77,7 +77,7 @@ metadata:
   name: serving-addressable-resolver
   labels:
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -101,7 +101,7 @@ metadata:
   name: channel-addressable-resolver
   labels:
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -129,7 +129,7 @@ metadata:
   name: broker-addressable-resolver
   labels:
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -151,7 +151,7 @@ metadata:
   name: flows-addressable-resolver
   labels:
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -186,7 +186,7 @@ kind: ClusterRole
 metadata:
   name: eventing-broker-filter
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -214,7 +214,7 @@ kind: ClusterRole
 metadata:
   name: eventing-broker-ingress
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -233,7 +233,7 @@ kind: ClusterRole
 metadata:
   name: eventing-config-reader
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -265,7 +265,7 @@ kind: ClusterRole
 metadata:
   name: channelable-manipulator
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 aggregationRule:
   clusterRoleSelectors:
@@ -281,7 +281,7 @@ metadata:
   name: meta-channelable-manipulator
   labels:
     duck.knative.dev/channelable: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "channelable-manipulator" role.
 rules:
@@ -319,7 +319,7 @@ metadata:
   name: knative-eventing-namespaced-admin
   labels:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["eventing.knative.dev"]
@@ -332,7 +332,7 @@ metadata:
   name: knative-messaging-namespaced-admin
   labels:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["messaging.knative.dev"]
@@ -345,7 +345,7 @@ metadata:
   name: knative-flows-namespaced-admin
   labels:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["flows.knative.dev"]
@@ -358,7 +358,7 @@ metadata:
   name: knative-sources-namespaced-admin
   labels:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["sources.knative.dev"]
@@ -371,7 +371,7 @@ metadata:
   name: knative-bindings-namespaced-admin
   labels:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["bindings.knative.dev"]
@@ -384,7 +384,7 @@ metadata:
   name: knative-eventing-namespaced-edit
   labels:
     rbac.authorization.k8s.io/aggregate-to-view: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["eventing.knative.dev", "messaging.knative.dev", "sources.knative.dev", "flows.knative.dev", "bindings.knative.dev"]
@@ -397,7 +397,7 @@ metadata:
   name: knative-eventing-namespaced-view
   labels:
     rbac.authorization.k8s.io/aggregate-to-view: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["eventing.knative.dev", "messaging.knative.dev", "sources.knative.dev", "flows.knative.dev", "bindings.knative.dev"]
@@ -423,7 +423,7 @@ kind: ClusterRole
 metadata:
   name: knative-eventing-controller
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -568,7 +568,7 @@ kind: ClusterRole
 metadata:
   name: knative-eventing-pingsource-mt-adapter
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -635,7 +635,7 @@ kind: ClusterRole
 metadata:
   name: podspecable-binding
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 aggregationRule:
   clusterRoleSelectors:
@@ -651,7 +651,7 @@ metadata:
   name: builtin-podspecable-binding
   labels:
     duck.knative.dev/podspecable: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "podspecable-binding role.
 rules:
@@ -698,7 +698,7 @@ kind: ClusterRole
 metadata:
   name: source-observer
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 aggregationRule:
   clusterRoleSelectors:
@@ -714,7 +714,7 @@ metadata:
   name: eventing-sources-source-observer
   labels:
     duck.knative.dev/source: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "source-observer" role.
 rules:
@@ -749,7 +749,7 @@ kind: ClusterRole
 metadata:
   name: knative-eventing-sources-controller
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -840,7 +840,7 @@ kind: ClusterRole
 metadata:
   name: knative-eventing-webhook
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   # For watching logging configuration and getting certs.
@@ -958,7 +958,7 @@ metadata:
   namespace: knative-eventing
   name: knative-eventing-webhook
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 rules:
   # For manipulating certs into secrets.
@@ -994,7 +994,7 @@ metadata:
   name: eventing-controller
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 
 ---
@@ -1004,7 +1004,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -1022,7 +1022,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller-resolver
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -1040,7 +1040,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller-source-observer
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -1058,7 +1058,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller-sources-controller
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -1076,7 +1076,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller-manipulator
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -1107,7 +1107,7 @@ metadata:
   name: pingsource-mt-adapter
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 
 ---
@@ -1116,7 +1116,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-eventing-pingsource-mt-adapter
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -1147,7 +1147,7 @@ metadata:
   name: eventing-webhook
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 ---
 
@@ -1156,7 +1156,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-webhook
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -1175,7 +1175,7 @@ metadata:
   namespace: knative-eventing
   name: eventing-webhook
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -1193,7 +1193,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-webhook-resolver
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -1211,7 +1211,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-webhook-podspecable-binding
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -1244,7 +1244,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas and descriptions
@@ -1488,7 +1488,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1658,7 +1658,7 @@ metadata:
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -1931,7 +1931,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
   name: containersources.sources.knative.dev
 spec:
@@ -2081,7 +2081,7 @@ metadata:
   name: eventtypes.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -2229,7 +2229,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -2564,7 +2564,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas and descriptions
@@ -2782,7 +2782,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -3102,7 +3102,7 @@ metadata:
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
   name: sinkbindings.sources.knative.dev
 spec:
@@ -3294,7 +3294,7 @@ metadata:
   name: subscriptions.messaging.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -3504,7 +3504,7 @@ metadata:
   name: triggers.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -3687,7 +3687,7 @@ metadata:
   name: config-br-default-channel
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 data:
   channel-template-spec: |
@@ -3714,7 +3714,7 @@ metadata:
   name: config-br-defaults
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 data:
   # Configures the default for any Broker that does not specify a spec.config or Broker class.
@@ -3752,7 +3752,7 @@ metadata:
   labels:
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 data:
   # ALPHA feature: The kreference-group allows you to use the Group field in KReferences.
@@ -3849,7 +3849,7 @@ metadata:
   labels:
   annotations:
     knative.dev/example-checksum: "9185c153"
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 data:
   _example: |
@@ -3892,7 +3892,7 @@ metadata:
   name: config-sugar
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
   annotations:
     knative.dev/example-checksum: "62dfac6f"
@@ -3928,7 +3928,7 @@ metadata:
   name: default-ch-webhook
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 data:
   # Configuration for defaulting channels that do not specify CRD implementations.
@@ -3961,7 +3961,7 @@ metadata:
   name: eventing-webhook-certs
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 # The data is populated at install time.
 ---
@@ -3987,7 +3987,7 @@ metadata:
   labels:
     knative.dev/high-availability: "true"
     app.kubernetes.io/component: eventing-controller
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 spec:
   selector:
@@ -3998,7 +3998,7 @@ spec:
       labels:
         app: eventing-controller
         app.kubernetes.io/component: eventing-controller
-        app.kubernetes.io/version: knative-v1.10.0
+        app.kubernetes.io/version: v1.10
         app.kubernetes.io/name: knative-eventing
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes.
@@ -4017,7 +4017,7 @@ spec:
       containers:
       - name: eventing-controller
         terminationMessagePolicy: FallbackToLogsOnError
-        image: registry.ci.openshift.org/openshift/knative-knative-v1.10.0:knative-eventing-controller
+        image: registry.ci.openshift.org/openshift/knative-v1.10:knative-eventing-controller
 
         resources:
           requests:
@@ -4037,7 +4037,7 @@ spec:
             value: knative.dev/eventing
           # APIServerSource
           - name: APISERVER_RA_IMAGE
-            value: registry.ci.openshift.org/openshift/knative-knative-v1.10.0:knative-eventing-apiserver-receive-adapter
+            value: registry.ci.openshift.org/openshift/knative-v1.10:knative-eventing-apiserver-receive-adapter
           - name: POD_NAME
             valueFrom:
               fieldRef:
@@ -4109,7 +4109,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app.kubernetes.io/component: pingsource-mt-adapter
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 spec:
   # when set to 0 (and only 0) will be set to 1 when the first PingSource is created.
@@ -4123,7 +4123,7 @@ spec:
       labels:
         <<: *labels
         app.kubernetes.io/component: pingsource-mt-adapter
-        app.kubernetes.io/version: knative-v1.10.0
+        app.kubernetes.io/version: v1.10
         app.kubernetes.io/name: knative-eventing
     spec:
       affinity:
@@ -4137,7 +4137,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: dispatcher
-          image: registry.ci.openshift.org/openshift/knative-knative-v1.10.0:knative-eventing-mtping
+          image: registry.ci.openshift.org/openshift/knative-v1.10:knative-eventing-mtping
           env:
             - name: SYSTEM_NAMESPACE
               value: ''
@@ -4209,7 +4209,7 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: config.webhook.eventing.knative.dev
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 webhooks:
 - admissionReviewVersions: ["v1", "v1beta1"]
@@ -4243,7 +4243,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: webhook.eventing.knative.dev
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 webhooks:
 - admissionReviewVersions: ["v1", "v1beta1"]
@@ -4275,7 +4275,7 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: validation.webhook.eventing.knative.dev
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 webhooks:
 - admissionReviewVersions: ["v1", "v1beta1"]
@@ -4308,7 +4308,7 @@ metadata:
   name: eventing-webhook-certs
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 # The data is populated at install time.
 ---
@@ -4331,7 +4331,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: sinkbindings.webhook.sources.knative.dev
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 webhooks:
 - admissionReviewVersions: ["v1", "v1beta1"]
@@ -4365,7 +4365,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app.kubernetes.io/component: eventing-webhook
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 spec:
   selector:
@@ -4377,7 +4377,7 @@ spec:
       labels:
         <<: *labels
         app.kubernetes.io/component: eventing-webhook
-        app.kubernetes.io/version: knative-v1.10.0
+        app.kubernetes.io/version: v1.10
         app.kubernetes.io/name: knative-eventing
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes.
@@ -4399,7 +4399,7 @@ spec:
 
         # This is the Go import path for the binary that is containerized
         # and substituted here.
-        image: registry.ci.openshift.org/openshift/knative-knative-v1.10.0:knative-eventing-webhook
+        image: registry.ci.openshift.org/openshift/knative-v1.10:knative-eventing-webhook
 
         resources:
           requests:
@@ -4477,7 +4477,7 @@ metadata:
   labels:
     role: eventing-webhook
     app.kubernetes.io/component: eventing-webhook
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
   name: eventing-webhook
   namespace: knative-eventing
@@ -4509,7 +4509,7 @@ metadata:
   name: config-leader-election
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
   annotations:
     knative.dev/example-checksum: "f7948630"
@@ -4571,7 +4571,7 @@ metadata:
   labels:
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 data:
   # Common configuration for all Knative codebase
@@ -4624,7 +4624,7 @@ metadata:
   labels:
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
   annotations:
     knative.dev/example-checksum: "f46cf09d"
@@ -4699,7 +4699,7 @@ metadata:
   labels:
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
   annotations:
     knative.dev/example-checksum: "0492ceb0"
@@ -4754,7 +4754,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app.kubernetes.io/component: eventing-webhook
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 spec:
   scaleTargetRef:
@@ -4779,7 +4779,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app.kubernetes.io/component: eventing-webhook
-    app.kubernetes.io/version: knative-v1.10.0
+    app.kubernetes.io/version: v1.10
     app.kubernetes.io/name: knative-eventing
 spec:
   minAvailable: 1
