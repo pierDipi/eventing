@@ -18,7 +18,7 @@ git commit -sm ":fire: remove unneeded workflows" .github/
 # Copy the openshift extra files from the OPENSHIFT/main branch.
 git fetch openshift main
 git checkout openshift/main -- .github/workflows openshift OWNERS_ALIASES OWNERS Makefile
-tag=${release/release-/}
+tag=${target/release-/}
 yq write --inplace openshift/project.yaml project.tag "knative-$tag"
 
 make generate-release
