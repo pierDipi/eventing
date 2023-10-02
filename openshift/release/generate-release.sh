@@ -18,8 +18,6 @@ mkdir -p $artifacts_dir
 rm -rf config/channels/in-memory-channel/configmaps/observability.yaml
 rm -rf config/channels/in-memory-channel/configmaps/tracing.yaml
 rm -rf config/channels/in-memory-channel/100-namespace.yaml
-rm -rf config/brokers/mt-channel-broker/deployments/hpa.yaml
-rm -rf config/brokers/mt-channel-broker/hpa.yaml
 
 image_prefix="registry.ci.openshift.org/openshift/knative-${release}:knative-eventing-"
 tag=""
