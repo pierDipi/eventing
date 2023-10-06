@@ -29,6 +29,7 @@ eventing_crds="${artifacts_dir}/eventing-crds.yaml"
 in_memory_channel="${artifacts_dir}/in-memory-channel.yaml"
 mt_channel_broker="${artifacts_dir}/mt-channel-broker.yaml"
 eventing_post_install="${artifacts_dir}/eventing-post-install.yaml"
+eventing_tls_networking="${artifacts_dir}/eventing-tls-networking.yaml"
 
 # Eventing CRDs
 resolve_resources config/core/resources "${eventing_crds}" "$image_prefix" "$tag"
@@ -45,3 +46,7 @@ resolve_resources config/channels/in-memory-channel/roles "${in_memory_channel}"
 resolve_resources config/channels/in-memory-channel/webhooks "${in_memory_channel}" "$image_prefix" "$tag"
 # MT Broker
 resolve_resources config/brokers/mt-channel-broker "${mt_channel_broker}" "$image_prefix" "$tag"
+# TLS
+resolve_resources config/brokers/mt-channel-broker-tls "${eventing_tls_networking}" "$image_prefix" "$tag"
+resolve_resources config/channels/in-memory-channel-tls "${eventing_tls_networking}" "$image_prefix" "$tag"
+resolve_resources config/tls/issuers "${eventing_tls_networking}" "$image_prefix" "$tag"
