@@ -43,6 +43,6 @@ spec:
     - imc-dispatcher.knative-eventing.svc
 
   issuerRef:
-    name: selfsigned-ca-issuer
+    name: eventing-issuer
     kind: Issuer
     group: cert-manager.io
