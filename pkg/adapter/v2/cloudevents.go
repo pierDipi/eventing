@@ -24,6 +24,8 @@ import (
 	"net/url"
 	"time"
 
+	corev1listers "k8s.io/client-go/listers/core/v1"
+
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	ceclient "github.com/cloudevents/sdk-go/v2/client"
 	"github.com/cloudevents/sdk-go/v2/event"
@@ -110,6 +112,8 @@ type ClientConfig struct {
 	Reporter            source.StatsReporter
 	CrStatusEventClient *crstatusevent.CRStatusEventClient
 	Options             []http.Option
+
+	TrustBundleConfigMapLister corev1listers.ConfigMapNamespaceLister
 }
 
 type clientConfigKey struct{}
@@ -147,6 +151,7 @@ func NewClient(cfg ClientConfig) (Client, error) {
 
 			clientConfig := eventingtls.NewDefaultClientConfig()
 			clientConfig.CACerts = cfg.Env.GetCACerts()
+			clientConfig.TrustBundleConfigMapLister = cfg.TrustBundleConfigMapLister
 
 			tlsConfig, err := eventingtls.GetTLSClientConfig(clientConfig)
 			if err != nil {

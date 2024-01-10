@@ -31,6 +31,7 @@ import (
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/types"
+	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/utils/pointer"
 
@@ -42,6 +43,7 @@ import (
 	"knative.dev/eventing/pkg/broker"
 	v1 "knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
+	"knative.dev/eventing/pkg/eventingtls"
 	"knative.dev/eventing/pkg/eventtype"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/tracing"
@@ -64,14 +66,20 @@ type Handler struct {
 	EvenTypeHandler *eventtype.EventTypeAutoHandler
 
 	Logger *zap.Logger
+
+	eventDispatcher *kncloudevents.Dispatcher
 }
 
-func NewHandler(logger *zap.Logger, reporter StatsReporter, defaulter client.EventDefaulter, brokerInformer v1.BrokerInformer) (*Handler, error) {
+func NewHandler(logger *zap.Logger, reporter StatsReporter, defaulter client.EventDefaulter, brokerInformer v1.BrokerInformer, trustBundleConfigMapLister corev1listers.ConfigMapNamespaceLister) (*Handler, error) {
 	connectionArgs := kncloudevents.ConnectionArgs{
 		MaxIdleConns:        defaultMaxIdleConnections,
 		MaxIdleConnsPerHost: defaultMaxIdleConnectionsPerHost,
 	}
 	kncloudevents.ConfigureConnectionArgs(&connectionArgs)
+
+	clientConfig := eventingtls.ClientConfig{
+		TrustBundleConfigMapLister: trustBundleConfigMapLister,
+	}
 
 	brokerInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -79,7 +87,7 @@ func NewHandler(logger *zap.Logger, reporter StatsReporter, defaulter client.Eve
 			if !ok {
 				return
 			}
-			kncloudevents.AddOrUpdateAddressableHandler(duckv1.Addressable{
+			kncloudevents.AddOrUpdateAddressableHandler(clientConfig, duckv1.Addressable{
 				URL:     broker.Status.Address.URL,
 				CACerts: broker.Status.Address.CACerts,
 			})
@@ -89,7 +97,7 @@ func NewHandler(logger *zap.Logger, reporter StatsReporter, defaulter client.Eve
 			if !ok {
 				return
 			}
-			kncloudevents.AddOrUpdateAddressableHandler(duckv1.Addressable{
+			kncloudevents.AddOrUpdateAddressableHandler(clientConfig, duckv1.Addressable{
 				URL:     broker.Status.Address.URL,
 				CACerts: broker.Status.Address.CACerts,
 			})
@@ -107,10 +115,11 @@ func NewHandler(logger *zap.Logger, reporter StatsReporter, defaulter client.Eve
 	})
 
 	return &Handler{
-		Defaulter:    defaulter,
-		Reporter:     reporter,
-		Logger:       logger,
-		BrokerLister: brokerInformer.Lister(),
+		Defaulter:       defaulter,
+		Reporter:        reporter,
+		Logger:          logger,
+		BrokerLister:    brokerInformer.Lister(),
+		eventDispatcher: kncloudevents.NewDispatcher(clientConfig),
 	}, nil
 }
 
@@ -275,7 +284,7 @@ func (h *Handler) receive(ctx context.Context, headers http.Header, event *cloud
 		return http.StatusBadRequest, kncloudevents.NoDuration
 	}
 
-	dispatchInfo, err := kncloudevents.SendEvent(ctx, *event, *channelAddress, kncloudevents.WithHeader(headers))
+	dispatchInfo, err := h.eventDispatcher.SendEvent(ctx, *event, *channelAddress, kncloudevents.WithHeader(headers))
 	if err != nil {
 		h.Logger.Error("failed to dispatch event", zap.Error(err))
 		return http.StatusInternalServerError, kncloudevents.NoDuration

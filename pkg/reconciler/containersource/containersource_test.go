@@ -29,14 +29,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgotesting "k8s.io/client-go/testing"
-	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	"knative.dev/pkg/apis"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/logging"
 
+	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
+
 	sourcesv1 "knative.dev/eventing/pkg/apis/sources/v1"
 	"knative.dev/eventing/pkg/client/injection/reconciler/sources/v1/containersource"
 	"knative.dev/eventing/pkg/reconciler/containersource/resources"
+
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
@@ -235,11 +237,12 @@ func TestAllCases(t *testing.T) {
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		ctx = addressable.WithDuck(ctx)
 		r := &Reconciler{
-			kubeClientSet:         fakekubeclient.Get(ctx),
-			eventingClientSet:     fakeeventingclient.Get(ctx),
-			containerSourceLister: listers.GetContainerSourceLister(),
-			deploymentLister:      listers.GetDeploymentLister(),
-			sinkBindingLister:     listers.GetSinkBindingLister(),
+			kubeClientSet:              fakekubeclient.Get(ctx),
+			eventingClientSet:          fakeeventingclient.Get(ctx),
+			containerSourceLister:      listers.GetContainerSourceLister(),
+			deploymentLister:           listers.GetDeploymentLister(),
+			sinkBindingLister:          listers.GetSinkBindingLister(),
+			trustBundleConfigMapLister: listers.GetConfigMapLister(),
 		}
 		return containersource.NewReconciler(ctx, logging.FromContext(ctx), fakeeventingclient.Get(ctx), listers.GetContainerSourceLister(), controller.GetEventRecorder(ctx), r)
 	},

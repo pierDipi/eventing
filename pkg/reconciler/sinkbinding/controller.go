@@ -20,7 +20,14 @@ import (
 	"context"
 	"errors"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
+	corev1listers "k8s.io/client-go/listers/core/v1"
+	"knative.dev/pkg/system"
+
 	sbinformer "knative.dev/eventing/pkg/client/injection/informers/sources/v1/sinkbinding"
+	"knative.dev/eventing/pkg/eventingtls"
+
 	"knative.dev/pkg/client/injection/ducks/duck/v1/podspecable"
 	"knative.dev/pkg/client/injection/kube/informers/core/v1/namespace"
 	"knative.dev/pkg/reconciler"
@@ -34,15 +41,20 @@ import (
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
-	v1 "knative.dev/eventing/pkg/apis/sources/v1"
 	"knative.dev/pkg/apis/duck"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/filtered"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/clients/dynamicclient"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/tracker"
 	"knative.dev/pkg/webhook/psbinding"
+
+	v1 "knative.dev/eventing/pkg/apis/sources/v1"
+
+	"knative.dev/eventing/pkg/apis/feature"
+	eventingreconciler "knative.dev/eventing/pkg/reconciler"
 )
 
 const (
@@ -50,8 +62,10 @@ const (
 )
 
 type SinkBindingSubResourcesReconciler struct {
-	res     *resolver.URIResolver
-	tracker tracker.Interface
+	res                        *resolver.URIResolver
+	tracker                    tracker.Interface
+	kubeclient                 kubernetes.Interface
+	trustBundleConfigMapLister corev1listers.ConfigMapLister
 }
 
 // NewController returns a new SinkBinding reconciler.
@@ -65,6 +79,18 @@ func NewController(
 	dc := dynamicclient.Get(ctx)
 	psInformerFactory := podspecable.Get(ctx)
 	namespaceInformer := namespace.Get(ctx)
+	trustBundleConfigMapInformer := configmapinformer.Get(ctx, eventingtls.TrustBundleLabelSelector)
+	trustBundleConfigMapLister := configmapinformer.Get(ctx, eventingtls.TrustBundleLabelSelector).Lister()
+
+	var globalResync func()
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(name string, value interface{}) {
+		logger.Infof("feature config changed. name: %s, value: %v", name, value)
+
+		if globalResync != nil {
+			globalResync()
+		}
+	})
+	featureStore.WatchConfigs(cmw)
 	c := &psbinding.BaseReconciler{
 		LeaderAwareFuncs: reconciler.LeaderAwareFuncs{
 			PromoteFunc: func(bkt reconciler.Bucket, enq func(reconciler.Bucket, types.NamespacedName)) error {
@@ -99,12 +125,14 @@ func NewController(
 
 	sbResolver := resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 	c.SubResourcesReconciler = &SinkBindingSubResourcesReconciler{
-		res:     sbResolver,
-		tracker: impl.Tracker,
+		res:                        sbResolver,
+		tracker:                    impl.Tracker,
+		kubeclient:                 kubeclient.Get(ctx),
+		trustBundleConfigMapLister: trustBundleConfigMapInformer.Lister(),
 	}
 
 	c.WithContext = func(ctx context.Context, b psbinding.Bindable) (context.Context, error) {
-		return v1.WithURIResolver(ctx, sbResolver), nil
+		return v1.WithTrustBundleConfigMapLister(v1.WithURIResolver(ctx, sbResolver), trustBundleConfigMapLister), nil
 	}
 	c.Tracker = impl.Tracker
 	c.Factory = &duck.CachedInformerFactory{
@@ -113,6 +141,11 @@ func NewController(
 			EventHandler: controller.HandleAll(c.Tracker.OnChanged),
 		},
 	}
+
+	trustBundleConfigMapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: eventingreconciler.FilterWithNamespace(system.Namespace()),
+		Handler:    controller.HandleAll(func(i interface{}) { globalResync() }),
+	})
 
 	return impl
 }
@@ -137,11 +170,11 @@ func ListAll(ctx context.Context, handler cache.ResourceEventHandler) psbinding.
 
 }
 
-func WithContextFactory(ctx context.Context, handler func(types.NamespacedName)) psbinding.BindableContext {
+func WithContextFactory(ctx context.Context, lister corev1listers.ConfigMapLister, handler func(types.NamespacedName)) psbinding.BindableContext {
 	r := resolver.NewURIResolverFromTracker(ctx, tracker.New(handler, controller.GetTrackerLease(ctx)))
 
 	return func(ctx context.Context, b psbinding.Bindable) (context.Context, error) {
-		return v1.WithURIResolver(ctx, r), nil
+		return v1.WithTrustBundleConfigMapLister(v1.WithURIResolver(ctx, r), lister), nil
 	}
 }
 
@@ -153,6 +186,12 @@ func (s *SinkBindingSubResourcesReconciler) Reconcile(ctx context.Context, b psb
 		sb.Status.MarkBindingUnavailable("NoResolver", "No Resolver associated with context for sink")
 		return err
 	}
+
+	if err := s.propagateTrustBundles(ctx, sb); err != nil {
+		sb.Status.MarkBindingUnavailable("TrustBundlePropagation", err.Error())
+		return err
+	}
+
 	if sb.Spec.Sink.Ref != nil {
 		s.tracker.TrackReference(tracker.Reference{
 			APIVersion: sb.Spec.Sink.Ref.APIVersion,
@@ -199,4 +238,13 @@ func createRecorder(ctx context.Context, agentName string) record.EventRecorder 
 	}
 
 	return recorder
+}
+
+func (s *SinkBindingSubResourcesReconciler) propagateTrustBundles(ctx context.Context, sb *v1.SinkBinding) error {
+	gvk := schema.GroupVersionKind{
+		Group:   v1.SchemeGroupVersion.Group,
+		Version: v1.SchemeGroupVersion.Version,
+		Kind:    "SinkBinding",
+	}
+	return eventingtls.PropagateTrustBundles(ctx, s.kubeclient, s.trustBundleConfigMapLister, gvk, sb)
 }

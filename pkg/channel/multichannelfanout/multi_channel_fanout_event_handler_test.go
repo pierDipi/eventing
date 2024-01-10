@@ -32,8 +32,12 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/ptr"
 
+	_ "knative.dev/pkg/system/testing"
+
 	"knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/fanout"
+	"knative.dev/eventing/pkg/eventingtls"
+	"knative.dev/eventing/pkg/kncloudevents"
 )
 
 var (
@@ -68,11 +72,13 @@ func TestNewEventHandlerWithConfig(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			logger := zaptest.NewLogger(t, zaptest.WrapOptions(zap.AddCaller()))
+			dispatcher := kncloudevents.NewDispatcher(eventingtls.ClientConfig{})
 			_, err := NewEventHandlerWithConfig(
 				context.TODO(),
 				logger,
 				tc.config,
 				reporter,
+				dispatcher,
 			)
 			if tc.createErr != "" {
 				if err == nil {
@@ -101,7 +107,8 @@ func TestNewEventHandler(t *testing.T) {
 	if h != nil {
 		t.Errorf("Found handler for %q but not expected", handlerName)
 	}
-	f, err := fanout.NewFanoutEventHandler(logger, fanout.Config{}, reporter, nil, nil, nil)
+	dispatcher := kncloudevents.NewDispatcher(eventingtls.ClientConfig{})
+	f, err := fanout.NewFanoutEventHandler(logger, fanout.Config{}, reporter, nil, nil, nil, dispatcher)
 	if err != nil {
 		t.Error("Failed to create FanoutMessagHandler: ", err)
 	}
@@ -311,7 +318,8 @@ func TestServeHTTPEventHandler(t *testing.T) {
 
 			logger := zaptest.NewLogger(t, zaptest.WrapOptions(zap.AddCaller()))
 			reporter := channel.NewStatsReporter("testcontainer", "testpod")
-			h, err := NewEventHandlerWithConfig(context.TODO(), logger, tc.config, reporter, tc.recvOptions...)
+			dispatcher := kncloudevents.NewDispatcher(eventingtls.ClientConfig{})
+			h, err := NewEventHandlerWithConfig(context.TODO(), logger, tc.config, reporter, dispatcher, tc.recvOptions...)
 			if err != nil {
 				t.Fatalf("Unexpected NewHandler error: '%v'", err)
 			}

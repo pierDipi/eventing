@@ -19,6 +19,12 @@ package apiserversource
 import (
 	"context"
 
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/filtered"
+	"knative.dev/pkg/system"
+
+	"knative.dev/eventing/pkg/eventingtls"
+	eventingreconciler "knative.dev/eventing/pkg/reconciler"
+
 	"github.com/kelseyhightower/envconfig"
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/pkg/configmap"
@@ -54,12 +60,14 @@ func NewController(
 	deploymentInformer := deploymentinformer.Get(ctx)
 	apiServerSourceInformer := apiserversourceinformer.Get(ctx)
 	namespaceInformer := namespace.Get(ctx)
+	trustBundleConfigMapInformer := configmapinformer.Get(ctx, eventingtls.TrustBundleLabelSelector)
 
 	r := &Reconciler{
-		kubeClientSet:   kubeclient.Get(ctx),
-		ceSource:        GetCfgHost(ctx),
-		configs:         reconcilersource.WatchConfigurations(ctx, component, cmw),
-		namespaceLister: namespaceInformer.Lister(),
+		kubeClientSet:              kubeclient.Get(ctx),
+		ceSource:                   GetCfgHost(ctx),
+		configs:                    reconcilersource.WatchConfigurations(ctx, component, cmw),
+		namespaceLister:            namespaceInformer.Lister(),
+		trustBundleConfigMapLister: trustBundleConfigMapInformer.Lister(),
 	}
 
 	env := &envConfig{}
@@ -69,6 +77,10 @@ func NewController(
 	r.receiveAdapterImage = env.Image
 
 	impl := apiserversourcereconciler.NewImpl(ctx, r)
+
+	var globalResync = func(obj interface{}) {
+		impl.GlobalResync(apiServerSourceInformer.Informer())
+	}
 
 	r.sinkResolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
@@ -88,6 +100,11 @@ func NewController(
 		AddFunc:    func(obj interface{}) { cb() },
 		UpdateFunc: func(oldObj, newObj interface{}) { cb() },
 		DeleteFunc: func(obj interface{}) { cb() },
+	})
+
+	trustBundleConfigMapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: eventingreconciler.FilterWithNamespace(system.Namespace()),
+		Handler:    controller.HandleAll(globalResync),
 	})
 
 	return impl

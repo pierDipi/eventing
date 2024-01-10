@@ -31,13 +31,15 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+
+	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	"knative.dev/eventing/pkg/apis/eventing"
 	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/broker"
-	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	brokerinformerfake "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker/fake"
 )
@@ -281,7 +283,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				brokerinformerfake.Get(ctx).Informer().GetStore().Add(b)
 			}
 
-			h, err := NewHandler(logger, &mockReporter{}, tc.defaulter, brokerinformerfake.Get(ctx))
+			h, err := NewHandler(logger, &mockReporter{}, tc.defaulter, brokerinformerfake.Get(ctx), configmapinformer.Get(ctx).Lister().ConfigMaps("ns"))
 			if err != nil {
 				t.Fatal("Unable to create receiver:", err)
 			}

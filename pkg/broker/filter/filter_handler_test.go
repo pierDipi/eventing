@@ -39,10 +39,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/pkg/apis"
 
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
+	reconcilertesting "knative.dev/pkg/reconciler/testing"
+
 	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/eventing/pkg/broker"
-	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	triggerinformerfake "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger/fake"
 )
@@ -441,6 +443,7 @@ func TestReceiver(t *testing.T) {
 				zaptest.NewLogger(t, zaptest.WrapOptions(zap.AddCaller())),
 				triggerinformerfake.Get(ctx),
 				reporter,
+				configmapinformer.Get(ctx).Lister().ConfigMaps("ns"),
 				func(ctx context.Context) context.Context {
 					return ctx
 				},
@@ -611,6 +614,7 @@ func TestReceiver_WithSubscriptionsAPI(t *testing.T) {
 				zaptest.NewLogger(t, zaptest.WrapOptions(zap.AddCaller())),
 				triggerinformerfake.Get(ctx),
 				reporter,
+				configmapinformer.Get(ctx).Lister().ConfigMaps("ns"),
 				func(ctx context.Context) context.Context {
 					return feature.ToContext(context.TODO(), feature.Flags{
 						feature.NewTriggerFilters: feature.Enabled,

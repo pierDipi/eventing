@@ -19,10 +19,12 @@ package v1
 import (
 	"context"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -30,9 +32,12 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
+
+	. "knative.dev/eventing/pkg/scheduler/testing"
 )
 
 var (
@@ -218,6 +223,53 @@ func TestSinkBindingUndo(t *testing.T) {
 			},
 		},
 	}, {
+		name: "Remove trust bundle volumes",
+		in: &duckv1.WithPod{
+			Spec: duckv1.WithPodSpec{
+				Template: duckv1.PodSpecable{
+					Spec: corev1.PodSpec{
+						Volumes: []corev1.Volume{
+							{
+								Name: "kne-bundle-knative-eventing-bundle" + strings.Repeat("a", 29),
+								VolumeSource: corev1.VolumeSource{
+									ConfigMap: &corev1.ConfigMapVolumeSource{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "knative-eventing-bundle" + strings.Repeat("a", 29),
+										},
+									},
+								},
+							},
+						},
+						Containers: []corev1.Container{{
+							Name:  "blah",
+							Image: "busybox",
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "kne-bundle-knative-eventing-bundle" + strings.Repeat("a", 29),
+									MountPath: "/knative-custom-certs/knative-eventing-bundle" + strings.Repeat("a", 29),
+									ReadOnly:  true,
+								},
+							},
+						}},
+					},
+				},
+			},
+		},
+		want: &duckv1.WithPod{
+			Spec: duckv1.WithPodSpec{
+				Template: duckv1.PodSpecable{
+					Spec: corev1.PodSpec{
+						Volumes: []corev1.Volume{},
+						Containers: []corev1.Container{{
+							Name:         "blah",
+							Image:        "busybox",
+							VolumeMounts: []corev1.VolumeMount{},
+						}},
+					},
+				},
+			},
+		},
+	}, {
 		name: "lots to remove",
 		in: &duckv1.WithPod{
 			Spec: duckv1.WithPodSpec{
@@ -348,9 +400,12 @@ func TestSinkBindingDo(t *testing.T) {
 	overrides := duckv1.CloudEventOverrides{Extensions: map[string]string{"foo": "bar"}}
 
 	tests := []struct {
-		name string
-		in   *duckv1.WithPod
-		want *duckv1.WithPod
+		name       string
+		in         *duckv1.WithPod
+		configMaps []*corev1.ConfigMap
+		sbStatus   *SinkBindingStatus
+		want       *duckv1.WithPod
+		ctx        context.Context
 	}{{
 		name: "nothing to add",
 		in: &duckv1.WithPod{
@@ -394,6 +449,168 @@ func TestSinkBindingDo(t *testing.T) {
 							}},
 						}},
 					},
+				},
+			},
+		},
+	}, {
+		name: "add trust bundles",
+		want: &duckv1.WithPod{
+			Spec: duckv1.WithPodSpec{
+				Template: duckv1.PodSpecable{
+					Spec: corev1.PodSpec{
+						Volumes: []corev1.Volume{
+							{
+								Name: "kne-bundle-knative-eventing-bundle" + strings.Repeat("a", 29),
+								VolumeSource: corev1.VolumeSource{
+									ConfigMap: &corev1.ConfigMapVolumeSource{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "knative-eventing-bundle" + strings.Repeat("a", 29),
+										},
+									},
+								},
+							},
+						},
+						Containers: []corev1.Container{{
+							Name:  "blah",
+							Image: "busybox",
+							Env: []corev1.EnvVar{{
+								Name:  "K_SINK",
+								Value: destination.URI.String(),
+							}, {
+								Name:  "K_CA_CERTS",
+								Value: caCert,
+							}, {
+								Name:  "K_CE_OVERRIDES",
+								Value: `{"extensions":{"foo":"bar"}}`,
+							}},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "kne-bundle-knative-eventing-bundle" + strings.Repeat("a", 29),
+									MountPath: "/knative-custom-certs/knative-eventing-bundle" + strings.Repeat("a", 29),
+									ReadOnly:  true,
+								},
+							},
+						}},
+					},
+				},
+			},
+		},
+		in: &duckv1.WithPod{
+			Spec: duckv1.WithPodSpec{
+				Template: duckv1.PodSpecable{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{{
+							Name:  "blah",
+							Image: "busybox",
+							Env: []corev1.EnvVar{{
+								Name:  "K_SINK",
+								Value: destination.URI.String(),
+							}, {
+								Name:  "K_CA_CERTS",
+								Value: caCert,
+							}, {
+								Name:  "K_CE_OVERRIDES",
+								Value: `{"extensions":{"foo":"bar"}}`,
+							}},
+						}},
+					},
+				},
+			},
+		},
+		configMaps: []*corev1.ConfigMap{
+			{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "knative-eventing",
+					Name:      "knative-eventing-bundle" + strings.Repeat("a", 29),
+					Labels: map[string]string{
+						"networking.knative.dev/trust-bundle": "true",
+					},
+				},
+				Immutable: nil,
+				Data: map[string]string{
+					"knative-eventing-bundle.pem": "something",
+				},
+			},
+		},
+	}, {
+		name: "add trust bundles - long CM name",
+		want: &duckv1.WithPod{
+			Spec: duckv1.WithPodSpec{
+				Template: duckv1.PodSpecable{
+					Spec: corev1.PodSpec{
+						Volumes: []corev1.Volume{
+							{
+								Name: "kne-bundle-7840a1e43e73e2ce40d1180208cba2a6knative-eventing-bun",
+								VolumeSource: corev1.VolumeSource{
+									ConfigMap: &corev1.ConfigMapVolumeSource{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "knative-eventing-bundle" + strings.Repeat("a", 30),
+										},
+									},
+								},
+							},
+						},
+						Containers: []corev1.Container{{
+							Name:  "blah",
+							Image: "busybox",
+							Env: []corev1.EnvVar{{
+								Name:  "K_SINK",
+								Value: destination.URI.String(),
+							}, {
+								Name:  "K_CA_CERTS",
+								Value: caCert,
+							}, {
+								Name:  "K_CE_OVERRIDES",
+								Value: `{"extensions":{"foo":"bar"}}`,
+							}},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "kne-bundle-7840a1e43e73e2ce40d1180208cba2a6knative-eventing-bun",
+									MountPath: "/knative-custom-certs/knative-eventing-bundle" + strings.Repeat("a", 30),
+									ReadOnly:  true,
+								},
+							},
+						}},
+					},
+				},
+			},
+		},
+		in: &duckv1.WithPod{
+			Spec: duckv1.WithPodSpec{
+				Template: duckv1.PodSpecable{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{{
+							Name:  "blah",
+							Image: "busybox",
+							Env: []corev1.EnvVar{{
+								Name:  "K_SINK",
+								Value: destination.URI.String(),
+							}, {
+								Name:  "K_CA_CERTS",
+								Value: caCert,
+							}, {
+								Name:  "K_CE_OVERRIDES",
+								Value: `{"extensions":{"foo":"bar"}}`,
+							}},
+						}},
+					},
+				},
+			},
+		},
+		configMaps: []*corev1.ConfigMap{
+			{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "knative-eventing",
+					Name:      "knative-eventing-bundle" + strings.Repeat("a", 30),
+					Labels: map[string]string{
+						"networking.knative.dev/trust-bundle": "true",
+					},
+				},
+				Immutable: nil,
+				Data: map[string]string{
+					"knative-eventing-bundle.pem": "something",
 				},
 			},
 		},
@@ -538,12 +755,34 @@ func TestSinkBindingDo(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got := test.in
-			ctx, _ := fakedynamicclient.With(context.Background(), scheme.Scheme, got)
-			ctx = addressable.WithDuck(ctx)
-			r := resolver.NewURIResolverFromTracker(ctx, tracker.New(func(types.NamespacedName) {}, 0))
-			ctx = WithURIResolver(context.Background(), r)
+			applicationContext, _ := fakedynamicclient.With(context.Background(), scheme.Scheme, got)
+			applicationContext = addressable.WithDuck(applicationContext)
+			r := resolver.NewURIResolverFromTracker(applicationContext, tracker.New(func(types.NamespacedName) {}, 0))
 
-			sb := &SinkBinding{Spec: SinkBindingSpec{
+			ctx, _ := SetupFakeContext(t)
+			if test.ctx != nil {
+				ctx = test.ctx
+			}
+			ctx = WithURIResolver(ctx, r)
+			ctx = WithTrustBundleConfigMapLister(ctx, configmapinformer.Get(ctx).Lister())
+
+			for _, cm := range test.configMaps {
+				_ = configmapinformer.Get(ctx).Informer().GetIndexer().Add(cm)
+			}
+
+			sb := &SinkBinding{
+				Spec: SinkBindingSpec{
+					SourceSpec: duckv1.SourceSpec{
+						Sink:                destination,
+						CloudEventOverrides: &overrides,
+					}},
+			}
+
+			if test.sbStatus != nil {
+				sb.Status = *test.sbStatus
+			}
+
+			sb = &SinkBinding{Spec: SinkBindingSpec{
 				SourceSpec: duckv1.SourceSpec{
 					Sink:                destination,
 					CloudEventOverrides: &overrides,

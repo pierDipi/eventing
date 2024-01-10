@@ -17,24 +17,37 @@ limitations under the License.
 package containersource
 
 import (
+	"context"
 	"testing"
 
+	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 	"knative.dev/pkg/configmap"
 	. "knative.dev/pkg/reconciler/testing"
+
+	_ "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/filtered/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake"
+	_ "knative.dev/pkg/injection/clients/dynamicclient/fake"
 
 	// Fake injection informers
 	_ "knative.dev/eventing/pkg/client/injection/informers/sources/v1/containersource/fake"
 	_ "knative.dev/eventing/pkg/client/injection/informers/sources/v1/sinkbinding/fake"
-	_ "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment/fake"
-	_ "knative.dev/pkg/injection/clients/dynamicclient/fake"
+
+	"knative.dev/eventing/pkg/eventingtls"
 )
 
 func TestNew(t *testing.T) {
-	ctx, _ := SetupFakeContext(t)
+	ctx, _ := SetupFakeContext(t, SetUpInformerSelector)
 
 	c := NewController(ctx, configmap.NewStaticWatcher())
 
 	if c == nil {
 		t.Fatal("Expected NewController to return a non-nil value")
 	}
+}
+
+func SetUpInformerSelector(ctx context.Context) context.Context {
+	ctx = filteredFactory.WithSelectors(ctx, eventingtls.TrustBundleLabelSelector)
+	return ctx
 }

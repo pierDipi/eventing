@@ -33,11 +33,13 @@ import (
 	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
+	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/logging"
 
 	"knative.dev/eventing/pkg/apis"
+	"knative.dev/eventing/pkg/eventingtls"
 	"knative.dev/eventing/pkg/utils"
 
 	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
@@ -69,17 +71,23 @@ type Handler struct {
 	// reporter reports stats of status code and dispatch time
 	reporter StatsReporter
 
+	eventDispatcher *kncloudevents.Dispatcher
+
 	triggerLister eventinglisters.TriggerLister
 	logger        *zap.Logger
 	withContext   func(ctx context.Context) context.Context
 }
 
 // NewHandler creates a new Handler and its associated EventReceiver.
-func NewHandler(logger *zap.Logger, triggerInformer v1.TriggerInformer, reporter StatsReporter, wc func(ctx context.Context) context.Context) (*Handler, error) {
+func NewHandler(logger *zap.Logger, triggerInformer v1.TriggerInformer, reporter StatsReporter, trustBundleConfigMapLister corev1listers.ConfigMapNamespaceLister, wc func(ctx context.Context) context.Context) (*Handler, error) {
 	kncloudevents.ConfigureConnectionArgs(&kncloudevents.ConnectionArgs{
 		MaxIdleConns:        defaultMaxIdleConnections,
 		MaxIdleConnsPerHost: defaultMaxIdleConnectionsPerHost,
 	})
+
+	clientConfig := eventingtls.ClientConfig{
+		TrustBundleConfigMapLister: trustBundleConfigMapLister,
+	}
 
 	triggerInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -87,7 +95,7 @@ func NewHandler(logger *zap.Logger, triggerInformer v1.TriggerInformer, reporter
 			if !ok {
 				return
 			}
-			kncloudevents.AddOrUpdateAddressableHandler(duckv1.Addressable{
+			kncloudevents.AddOrUpdateAddressableHandler(clientConfig, duckv1.Addressable{
 				URL:     trigger.Status.SubscriberURI,
 				CACerts: trigger.Status.SubscriberCACerts,
 			})
@@ -97,7 +105,7 @@ func NewHandler(logger *zap.Logger, triggerInformer v1.TriggerInformer, reporter
 			if !ok {
 				return
 			}
-			kncloudevents.AddOrUpdateAddressableHandler(duckv1.Addressable{
+			kncloudevents.AddOrUpdateAddressableHandler(clientConfig, duckv1.Addressable{
 				URL:     trigger.Status.SubscriberURI,
 				CACerts: trigger.Status.SubscriberCACerts,
 			})
@@ -115,10 +123,11 @@ func NewHandler(logger *zap.Logger, triggerInformer v1.TriggerInformer, reporter
 	})
 
 	return &Handler{
-		reporter:      reporter,
-		triggerLister: triggerInformer.Lister(),
-		logger:        logger,
-		withContext:   wc,
+		reporter:        reporter,
+		eventDispatcher: kncloudevents.NewDispatcher(clientConfig),
+		triggerLister:   triggerInformer.Lister(),
+		logger:          logger,
+		withContext:     wc,
 	}, nil
 }
 
@@ -228,7 +237,7 @@ func (h *Handler) send(ctx context.Context, writer http.ResponseWriter, headers 
 	additionalHeaders := headers.Clone()
 	additionalHeaders.Set(apis.KnNamespaceHeader, t.GetNamespace())
 
-	dispatchInfo, err := kncloudevents.SendEvent(ctx, *event, target, kncloudevents.WithHeader(additionalHeaders))
+	dispatchInfo, err := h.eventDispatcher.SendEvent(ctx, *event, target, kncloudevents.WithHeader(additionalHeaders))
 	if err != nil {
 		h.logger.Error("failed to send event", zap.Error(err))
 

@@ -43,6 +43,10 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	_ "knative.dev/pkg/system/testing"
+
+	"knative.dev/eventing/pkg/eventingtls"
 	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/utils"
@@ -779,6 +783,10 @@ func TestSendEvent(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
+			ctx := context.Background()
+			ctx, _ = fakekubeclient.With(ctx)
+
+			dispatcher := kncloudevents.NewDispatcher(eventingtls.NewDefaultClientConfig())
 			destHandler := &fakeHandler{
 				t:        t,
 				response: tc.fakeResponse,
@@ -824,8 +832,6 @@ func TestSendEvent(t *testing.T) {
 			}
 			event.SetData(cloudevents.ApplicationJSON, tc.body)
 
-			ctx := context.Background()
-
 			destination := duckv1.Addressable{
 				URL: getOnlyDomainURL(t, tc.sendToDestination, destServer.URL),
 			}
@@ -850,7 +856,7 @@ func TestSendEvent(t *testing.T) {
 			if tc.header != nil {
 				headers = utils.PassThroughHeaders(tc.header)
 			}
-			info, err := kncloudevents.SendMessage(ctx, message, destination,
+			info, err := dispatcher.SendMessage(ctx, message, destination,
 				kncloudevents.WithReply(reply),
 				kncloudevents.WithDeadLetterSink(deadLetterSink),
 				kncloudevents.WithHeader(headers))
@@ -923,6 +929,7 @@ func TestDispatchMessageToTLSEndpoint(t *testing.T) {
 		// give the servers a bit time to fully shutdown to prevent port clashes
 		time.Sleep(500 * time.Millisecond)
 	}()
+	dispatcher := kncloudevents.NewDispatcher(eventingtls.NewDefaultClientConfig())
 	eventToSend := test.FullEvent()
 
 	// destination
@@ -945,7 +952,7 @@ func TestDispatchMessageToTLSEndpoint(t *testing.T) {
 
 	// send event
 	message := binding.ToMessage(&eventToSend)
-	info, err := kncloudevents.SendMessage(ctx, message, destination)
+	info, err := dispatcher.SendMessage(ctx, message, destination)
 	require.Nil(t, err)
 	require.Equal(t, 200, info.ResponseCode)
 
@@ -969,6 +976,7 @@ func TestDispatchMessageToTLSEndpointWithReply(t *testing.T) {
 		// give the servers a bit time to fully shutdown to prevent port clashes
 		time.Sleep(500 * time.Millisecond)
 	}()
+	dispatcher := kncloudevents.NewDispatcher(eventingtls.NewDefaultClientConfig())
 
 	eventToSend := test.FullEvent()
 	eventToReply := test.FullEvent()
@@ -1008,7 +1016,7 @@ func TestDispatchMessageToTLSEndpointWithReply(t *testing.T) {
 
 	// send event
 	message := binding.ToMessage(&eventToSend)
-	info, err := kncloudevents.SendMessage(ctx, message, destination, kncloudevents.WithReply(&reply))
+	info, err := dispatcher.SendMessage(ctx, message, destination, kncloudevents.WithReply(&reply))
 	require.Nil(t, err)
 	require.Equal(t, 200, info.ResponseCode)
 
@@ -1032,6 +1040,7 @@ func TestDispatchMessageToTLSEndpointWithDeadLetterSink(t *testing.T) {
 		// give the servers a bit time to fully shutdown to prevent port clashes
 		time.Sleep(500 * time.Millisecond)
 	}()
+	dispatcher := kncloudevents.NewDispatcher(eventingtls.NewDefaultClientConfig())
 	eventToSend := test.FullEvent()
 
 	// destination
@@ -1066,7 +1075,7 @@ func TestDispatchMessageToTLSEndpointWithDeadLetterSink(t *testing.T) {
 
 	// send event
 	message := binding.ToMessage(&eventToSend)
-	info, err := kncloudevents.SendMessage(ctx, message, destination, kncloudevents.WithDeadLetterSink(&dls))
+	info, err := dispatcher.SendMessage(ctx, message, destination, kncloudevents.WithDeadLetterSink(&dls))
 	require.Nil(t, err)
 	require.Equal(t, 200, info.ResponseCode)
 

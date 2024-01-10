@@ -20,11 +20,17 @@ import (
 	"context"
 
 	"k8s.io/client-go/tools/cache"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/filtered"
+	"knative.dev/pkg/system"
+
 	v1 "knative.dev/eventing/pkg/apis/sources/v1"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	containersourceinformer "knative.dev/eventing/pkg/client/injection/informers/sources/v1/containersource"
 	sinkbindinginformer "knative.dev/eventing/pkg/client/injection/informers/sources/v1/sinkbinding"
 	v1containersource "knative.dev/eventing/pkg/client/injection/reconciler/sources/v1/containersource"
+	"knative.dev/eventing/pkg/eventingtls"
+	eventingreconciler "knative.dev/eventing/pkg/reconciler"
+
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/configmap"
@@ -42,15 +48,21 @@ func NewController(
 	containersourceInformer := containersourceinformer.Get(ctx)
 	sinkbindingInformer := sinkbindinginformer.Get(ctx)
 	deploymentInformer := deploymentinformer.Get(ctx)
+	trustBundleConfigMapInformer := configmapinformer.Get(ctx, eventingtls.TrustBundleLabelSelector)
 
 	r := &Reconciler{
-		kubeClientSet:         kubeClient,
-		eventingClientSet:     eventingClient,
-		containerSourceLister: containersourceInformer.Lister(),
-		deploymentLister:      deploymentInformer.Lister(),
-		sinkBindingLister:     sinkbindingInformer.Lister(),
+		kubeClientSet:              kubeClient,
+		eventingClientSet:          eventingClient,
+		containerSourceLister:      containersourceInformer.Lister(),
+		deploymentLister:           deploymentInformer.Lister(),
+		sinkBindingLister:          sinkbindingInformer.Lister(),
+		trustBundleConfigMapLister: trustBundleConfigMapInformer.Lister(),
 	}
 	impl := v1containersource.NewImpl(ctx, r)
+
+	globalResync := func(obj interface{}) {
+		impl.GlobalResync(containersourceInformer.Informer())
+	}
 
 	containersourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
@@ -62,6 +74,11 @@ func NewController(
 	sinkbindingInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterController(&v1.ContainerSource{}),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
+	})
+
+	trustBundleConfigMapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: eventingreconciler.FilterWithNamespace(system.Namespace()),
+		Handler:    controller.HandleAll(globalResync),
 	})
 
 	return impl

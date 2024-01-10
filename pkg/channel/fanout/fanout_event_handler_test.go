@@ -28,9 +28,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"k8s.io/utils/pointer"
-	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
-	"knative.dev/eventing/pkg/kncloudevents"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/eventingtls"
+	"knative.dev/eventing/pkg/kncloudevents"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -41,6 +43,8 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"knative.dev/pkg/apis"
+
+	_ "knative.dev/pkg/system/testing"
 
 	"knative.dev/eventing/pkg/channel"
 )
@@ -362,6 +366,7 @@ func testFanoutEventHandler(t *testing.T, async bool, receiverFunc channel.Event
 		t.Fatal(err)
 	}
 
+	dispatcher := kncloudevents.NewDispatcher(eventingtls.ClientConfig{})
 	calledChan := make(chan bool, 1)
 	recvOptionFunc := func(*channel.EventReceiver) error {
 		calledChan <- true
@@ -378,6 +383,7 @@ func testFanoutEventHandler(t *testing.T, async bool, receiverFunc channel.Event
 		nil,
 		nil,
 		nil,
+		dispatcher,
 		recvOptionFunc,
 	)
 	<-calledChan

@@ -17,8 +17,13 @@ limitations under the License.
 package apiserversource
 
 import (
+	"context"
 	"os"
 	"testing"
+
+	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
+
+	"knative.dev/eventing/pkg/eventingtls"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,15 +35,18 @@ import (
 	"knative.dev/pkg/metrics"
 	"knative.dev/pkg/tracing/config"
 
-	// Fake injection informers
-	_ "knative.dev/eventing/pkg/client/injection/informers/sources/v1/apiserversource/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment/fake"
+	// Fake injection informers
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/filtered/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/namespace/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake"
 	. "knative.dev/pkg/reconciler/testing"
+
+	_ "knative.dev/eventing/pkg/client/injection/informers/sources/v1/apiserversource/fake"
 )
 
 func TestNew(t *testing.T) {
-	ctx, _ := SetupFakeContext(t)
+	ctx, _ := SetupFakeContext(t, SetUpInformerSelector)
 	ctx = withCfgHost(ctx, &rest.Config{Host: "unit_test"})
 	ctx = addressable.WithDuck(ctx)
 	os.Setenv("METRICS_DOMAIN", "knative.dev/eventing")
@@ -74,4 +82,9 @@ func TestNew(t *testing.T) {
 	if c == nil {
 		t.Fatal("Expected NewController to return a non-nil value")
 	}
+}
+
+func SetUpInformerSelector(ctx context.Context) context.Context {
+	ctx = filteredFactory.WithSelectors(ctx, eventingtls.TrustBundleLabelSelector)
+	return ctx
 }
