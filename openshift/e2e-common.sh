@@ -136,6 +136,25 @@ function run_e2e_encryption_auth_tests(){
 
   oc wait --for=condition=Ready knativeeventing.operator.knative.dev knative-eventing -n "${EVENTING_NAMESPACE}" --timeout=900s
 
+  local openshift_version=$(oc version -o yaml | yq read - openshiftVersion)
+  local cert_manager_namespace="cert-manager"
+  if printf '%s\n4.12\n' "${openshift_version}" | sort --version-sort -C; then
+      # OCP version is older as 4.12 and thus cert-manager-operator is only available as tech-preview in this version (cert-manager-operator GA'ed in OCP 4.12)
+      echo "Running on OpenShift ${openshift_version} which supports cert-manager-operator only in tech-preview"
+      cert_manager_namespace="openshift-cert-manager"
+  else
+    echo "Running on OpenShift ${openshift_version} which supports GA'ed cert-manager-operator"
+  fi
+
+  local ca_cert_tls_secret="knative-eventing-ca"
+  echo "Waiting until secrets: ${ca_cert_tls_secret} exist in ${cert_manager_namespace}"
+  wait_until_object_exists secret "${ca_cert_tls_secret}" "${cert_manager_namespace}"
+
+  oc get configmap -n "${cert_manager_namespace}" "${ca_cert_tls_secret}" -o=jsonpath='{.data.tls\.crt}' > tls.crt
+  oc get configmap -n "${cert_manager_namespace}" "${ca_cert_tls_secret}" -o=jsonpath='{.data.ca\.crt}' > ca.crt
+  oc create configmap -n knative-eventing knative-eventing-bundle --from-file=tls.crt --from-file=ca.crt \
+    --dry-run=client -o yaml | kubectl apply -n knative-eventing -f -
+
   local regex="TLS"
 
   local test_name="${1:-}"
@@ -219,4 +238,30 @@ function run_conformance_tests(){
     ${common_opts} || failed=$?
 
   return $failed
+}
+
+# Waits until the given object exists.
+# Parameters: $1 - the kind of the object.
+#             $2 - object's name.
+#             $3 - namespace (optional).
+function wait_until_object_exists() {
+  local KUBECTL_ARGS="get $1 $2"
+  local DESCRIPTION="$1 $2"
+
+  if [[ -n $3 ]]; then
+    KUBECTL_ARGS="get -n $3 $1 $2"
+    DESCRIPTION="$1 $3/$2"
+  fi
+  echo -n "Waiting until ${DESCRIPTION} exists"
+  for i in {1..250}; do  # timeout after 5 minutes
+    if kubectl ${KUBECTL_ARGS} > /dev/null 2>&1; then
+      echo -e "\n${DESCRIPTION} exists"
+      return 0
+    fi
+    echo -n "."
+    sleep 2
+  done
+  echo -e "\n\nERROR: timeout waiting for ${DESCRIPTION} to exist"
+  kubectl ${KUBECTL_ARGS}
+  return 1
 }
