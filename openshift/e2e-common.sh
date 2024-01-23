@@ -80,11 +80,18 @@ function timeout_non_zero() {
 function install_serverless(){
   header "Installing Serverless Operator"
 
+  GO111MODULE=off go get -u github.com/openshift-knative/hack/cmd/sobranch
+
+  local release
+  release=$(yq r "${SCRIPT_DIR}/project.yaml" project.tag)
+  release=${release/knative-/}
+  so_branch=$( $(go env GOPATH)/bin/sobranch --upstream-version "${release}")
+
   KNATIVE_EVENTING_MANIFESTS_DIR="$(pwd)/openshift/release/artifacts"
   export KNATIVE_EVENTING_MANIFESTS_DIR
 
   local operator_dir=/tmp/serverless-operator
-  git clone --branch main https://github.com/openshift-knative/serverless-operator.git $operator_dir
+  git clone --branch "${so_branch}" https://github.com/openshift-knative/serverless-operator.git $operator_dir || git clone --branch main https://github.com/openshift-knative/serverless-operator.git $operator_dir
   export GOPATH=/tmp/go
   local failed=0
   pushd $operator_dir || return $?
