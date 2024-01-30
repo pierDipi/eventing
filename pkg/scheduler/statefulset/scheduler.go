@@ -26,16 +26,14 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	"k8s.io/apimachinery/pkg/types"
 	clientappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/utils/integer"
 	"knative.dev/pkg/reconciler"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
-	statefulsetinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 
@@ -87,7 +85,16 @@ func New(ctx context.Context, cfg *Config) (scheduler.Scheduler, error) {
 	podInformer := podinformer.Get(ctx)
 	podLister := podInformer.Lister().Pods(cfg.StatefulSetNamespace)
 
-	stateAccessor := st.NewStateBuilder(ctx, cfg.StatefulSetNamespace, cfg.StatefulSetName, cfg.VPodLister, cfg.PodCapacity, cfg.SchedulerPolicy, cfg.SchedPolicy, cfg.DeschedPolicy, podLister, cfg.NodeLister)
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	getScale := func() *autoscalingv1.Scale {
+		// cyclic dependencies
+		// TODO somehow return what autoscaler.GetScale() returns
+		return nil
+	}
+
+	stateAccessor := st.NewStateBuilder(ctx, getScale, cfg.StatefulSetName, cfg.VPodLister, cfg.PodCapacity, cfg.SchedulerPolicy, cfg.SchedPolicy, cfg.DeschedPolicy, podLister, cfg.NodeLister)
 
 	var getReserved GetReserved
 	cfg.getReserved = func() map[types.NamespacedName]map[string]int32 {
@@ -96,8 +103,6 @@ func New(ctx context.Context, cfg *Config) (scheduler.Scheduler, error) {
 
 	autoscaler := newAutoscaler(ctx, cfg, stateAccessor)
 
-	var wg sync.WaitGroup
-	wg.Add(1)
 	go func() {
 		wg.Wait()
 		autoscaler.Start(ctx)
@@ -132,9 +137,6 @@ type StatefulSetScheduler struct {
 	lock                 sync.Locker
 	stateAccessor        st.StateAccessor
 	autoscaler           Autoscaler
-
-	// replicas is the (cached) number of statefulset replicas.
-	replicas int32
 
 	// reserved tracks vreplicas that have been placed (ie. scheduled) but haven't been
 	// committed yet (ie. not appearing in vpodLister)
@@ -181,13 +183,6 @@ func newStatefulSetScheduler(ctx context.Context,
 		reserved:             make(map[types.NamespacedName]map[string]int32),
 		autoscaler:           autoscaler,
 	}
-
-	// Monitor our statefulset
-	statefulsetInformer := statefulsetinformer.Get(ctx)
-	statefulsetInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(cfg.StatefulSetNamespace, cfg.StatefulSetName),
-		Handler:    controller.HandleAll(scheduler.updateStatefulset),
-	})
 
 	return scheduler
 }
@@ -452,7 +447,7 @@ func (s *StatefulSetScheduler) addReplicasWithPolicy(vpod scheduler.VPod, diff i
 			return placements, diff
 		}
 
-		if s.replicas == 0 { //no pods to filter
+		if state.Replicas == 0 { //no pods to filter
 			logger.Infow("no pods available in statefulset")
 			s.reservePlacements(vpod, placements)
 			diff = numVreps - i //for autoscaling up
@@ -739,7 +734,7 @@ func (s *StatefulSetScheduler) addReplicas(states *st.State, diff int32, placeme
 
 	if diff > 0 {
 		// Needs to allocate replicas to additional pods
-		for ordinal := int32(0); ordinal < s.replicas; ordinal++ {
+		for ordinal := int32(0); ordinal < states.Replicas; ordinal++ {
 			f := states.Free(ordinal)
 			if f > 0 {
 				allocation := integer.Int32Min(f, diff)
@@ -759,23 +754,6 @@ func (s *StatefulSetScheduler) addReplicas(states *st.State, diff int32, placeme
 	}
 
 	return newPlacements, diff
-}
-
-func (s *StatefulSetScheduler) updateStatefulset(obj interface{}) {
-	statefulset, ok := obj.(*appsv1.StatefulSet)
-	if !ok {
-		s.logger.Fatalw("expected a Statefulset object", zap.Any("object", obj))
-	}
-
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	if statefulset.Spec.Replicas == nil {
-		s.replicas = 1
-	} else if s.replicas != *statefulset.Spec.Replicas {
-		s.replicas = *statefulset.Spec.Replicas
-		s.logger.Infow("statefulset replicas updated", zap.Int32("replicas", s.replicas))
-	}
 }
 
 func (s *StatefulSetScheduler) reservePlacements(vpod scheduler.VPod, placements []duckv1alpha1.Placement) {

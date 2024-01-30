@@ -24,7 +24,9 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -81,6 +83,9 @@ type autoscaler struct {
 	getReserved GetReserved
 
 	lastCompactAttempt time.Time
+
+	scale   *autoscalingv1.Scale
+	scaleMu sync.RWMutex
 }
 
 var (
@@ -91,6 +96,7 @@ var (
 func (a *autoscaler) Promote(b reconciler.Bucket, _ func(reconciler.Bucket, types.NamespacedName)) error {
 	if b.Has(ephemeralLeaderElectionObject) {
 		// The promoted bucket has the ephemeralLeaderElectionObject, so we are leader.
+		a.refreshScale(context.Background())
 		a.isLeader.Store(true)
 	}
 	return nil
@@ -183,12 +189,7 @@ func (a *autoscaler) doautoscale(ctx context.Context, attemptScaleDown bool) err
 		return err
 	}
 
-	scale, err := a.statefulSetClient.GetScale(ctx, a.statefulSetName, metav1.GetOptions{})
-	if err != nil {
-		// skip a beat
-		a.logger.Infow("failed to get scale subresource", zap.Error(err))
-		return err
-	}
+	scale := a.GetScale()
 
 	a.logger.Debugw("checking adapter capacity",
 		zap.Int32("replicas", scale.Spec.Replicas),
@@ -236,11 +237,16 @@ func (a *autoscaler) doautoscale(ctx context.Context, attemptScaleDown bool) err
 		scale.Spec.Replicas = newreplicas
 		a.logger.Infow("updating adapter replicas", zap.Int32("replicas", scale.Spec.Replicas))
 
-		_, err = a.statefulSetClient.UpdateScale(ctx, a.statefulSetName, scale, metav1.UpdateOptions{})
+		newScale, err := a.statefulSetClient.UpdateScale(ctx, a.statefulSetName, scale, metav1.UpdateOptions{})
+		if apierrors.IsConflict(err) {
+			a.refreshScale(ctx)
+		}
 		if err != nil {
 			a.logger.Errorw("updating scale subresource failed", zap.Error(err))
 			return err
 		}
+		a.setScale(newScale)
+
 	} else if attemptScaleDown {
 		// since the number of replicas hasn't changed and time has approached to scale down,
 		// take the opportunity to compact the vreplicas
@@ -364,4 +370,28 @@ func (a *autoscaler) minNonZeroInt(slice []int32) int32 {
 		}
 	}
 	return min
+}
+
+func (a *autoscaler) refreshScale(ctx context.Context) {
+	scale, err := a.statefulSetClient.GetScale(ctx, a.statefulSetName, metav1.GetOptions{})
+	if err != nil {
+		// skip a beat
+		a.logger.Warnw("failed to get scale subresource", zap.Error(err))
+		return
+	}
+	a.setScale(scale)
+}
+
+func (a *autoscaler) setScale(scale *autoscalingv1.Scale) {
+	a.scaleMu.Lock()
+	defer a.scaleMu.Unlock()
+
+	a.scale = scale
+}
+
+func (a *autoscaler) GetScale() *autoscalingv1.Scale {
+	a.scaleMu.RLock()
+	defer a.scaleMu.RUnlock()
+
+	return a.scale
 }
