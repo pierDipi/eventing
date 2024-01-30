@@ -28,12 +28,10 @@ import (
 	"go.uber.org/zap"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	"k8s.io/apimachinery/pkg/types"
-	clientappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/utils/integer"
 	"knative.dev/pkg/reconciler"
 
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 
@@ -131,7 +129,6 @@ type StatefulSetScheduler struct {
 	logger               *zap.SugaredLogger
 	statefulSetName      string
 	statefulSetNamespace string
-	statefulSetClient    clientappsv1.StatefulSetInterface
 	podLister            corev1listers.PodNamespaceLister
 	vpodLister           scheduler.VPodLister
 	lock                 sync.Locker
@@ -175,7 +172,6 @@ func newStatefulSetScheduler(ctx context.Context,
 		logger:               logging.FromContext(ctx),
 		statefulSetNamespace: cfg.StatefulSetNamespace,
 		statefulSetName:      cfg.StatefulSetName,
-		statefulSetClient:    kubeclient.Get(ctx).AppsV1().StatefulSets(cfg.StatefulSetNamespace),
 		podLister:            podlister,
 		vpodLister:           cfg.VPodLister,
 		lock:                 new(sync.Mutex),
