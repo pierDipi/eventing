@@ -286,7 +286,13 @@ func (d *Dispatcher) executeRequest(ctx context.Context, target duckv1.Addressab
 
 	start := time.Now()
 	response, err := client.DoWithRetries(req, retryConfig)
+	if isAsyncResponse(err, response) {
+		_, _ = io.Copy(io.Discard, response.Body)
+		_ = response.Body.Close()
+		response, err = d.handleAsync(ctx, client, target, response, retryConfig)
+	}
 	dispatchInfo.Duration = time.Since(start)
+
 	if err != nil {
 		dispatchInfo.ResponseCode = http.StatusInternalServerError
 		dispatchInfo.ResponseBody = []byte(fmt.Sprintf("dispatch error: %s", err.Error()))
@@ -332,6 +338,10 @@ func (d *Dispatcher) executeRequest(ctx context.Context, target duckv1.Addressab
 	return ctx, responseMessage, &dispatchInfo, nil
 }
 
+func isAsyncResponse(err error, response *http.Response) bool {
+	return err != nil && response.StatusCode == http.StatusAccepted && response.Header.Get("Location") != ""
+}
+
 func (d *Dispatcher) createRequest(ctx context.Context, message binding.Message, target duckv1.Addressable, additionalHeaders http.Header, oidcServiceAccount *types.NamespacedName, transformers ...binding.Transformer) (*http.Request, error) {
 	request, err := http.NewRequestWithContext(ctx, "POST", target.URL.String(), nil)
 	if err != nil {
@@ -357,6 +367,40 @@ func (d *Dispatcher) createRequest(ctx context.Context, message binding.Message,
 	}
 
 	return request, nil
+}
+
+func (d *Dispatcher) handleAsync(ctx context.Context, c *client, target duckv1.Addressable, response *http.Response, config *RetryConfig) (*http.Response, error) {
+	url := target.DeepCopy()
+	url.URL.Path = response.Header.Get("Location")
+
+	request, err := http.NewRequestWithContext(ctx, "GET", url.URL.String(), nil)
+
+	if config == nil || config.RequestTimeout == 0 {
+		time.Sleep(defaultAsyncTimeout)
+		response, err = c.DoWithRetries(request, nil)
+		return response, err
+	}
+
+	cfg := &RetryConfig{
+		RetryMax:              config.RetryMax,
+		BackoffDelay:          config.BackoffDelay,
+		BackoffPolicy:         config.BackoffPolicy,
+		CheckRetry:            config.CheckRetry,
+		Backoff:               config.Backoff,
+		RequestTimeout:        config.RequestTimeout,
+		RetryAfterMaxDuration: config.RetryAfterMaxDuration,
+	}
+
+	deadline := time.Now().Add(cfg.RequestTimeout)
+
+	cfg.CheckRetry = func(ctx context.Context, response *http.Response, err error) (bool, error) {
+		if isAsyncResponse(err, response) && time.Now().Before(deadline) {
+			return true, nil
+		}
+		return config.CheckRetry(ctx, response, err)
+	}
+
+	return c.DoWithRetries(request, cfg)
 }
 
 // client is a wrapper around the http.Client, which provides methods for retries

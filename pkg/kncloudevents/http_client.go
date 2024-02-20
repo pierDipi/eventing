@@ -35,6 +35,7 @@ import (
 const (
 	defaultRetryWaitMin    = 1 * time.Second
 	defaultRetryWaitMax    = 30 * time.Second
+	defaultAsyncTimeout    = 2 * time.Minute
 	defaultCleanupInterval = 5 * time.Minute
 )
 

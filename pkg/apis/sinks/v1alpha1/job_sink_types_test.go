@@ -18,7 +18,7 @@ package v1alpha1
 
 import "testing"
 
-func TestPingSource_GetStatus(t *testing.T) {
+func TestGetStatus(t *testing.T) {
 	p := &JobSink{
 		Status: JobSinkStatus{},
 	}
