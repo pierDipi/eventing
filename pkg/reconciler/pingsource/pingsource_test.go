@@ -144,12 +144,8 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", sourceName),
 				Eventf(corev1.EventTypeWarning, "SinkNotFound",
 					`Sink not found: {"ref":{"kind":"Channel","namespace":"testnamespace","name":"testsink","apiVersion":"messaging.knative.dev/v1"}}`),
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(sourceName, testNS),
 			},
 		}, {
 			Name: "sink ref has no namespace",
@@ -187,12 +183,8 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", sourceName),
 				Eventf(corev1.EventTypeWarning, "SinkNotFound",
 					`Sink not found: {"ref":{"kind":"Channel","namespace":"testnamespace","name":"testsink","apiVersion":"messaging.knative.dev/v1"}}`),
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(sourceName, testNS),
 			},
 		}, {
 			Name: "error creating deployment",
@@ -216,11 +208,7 @@ func TestAllCases(t *testing.T) {
 			},
 			Key: testNS + "/" + sourceName,
 			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", sourceName),
 				Eventf(corev1.EventTypeWarning, "InternalError", "deployments.apps \"pingsource-mt-adapter\" not found"),
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(sourceName, testNS),
 			},
 			WantErr: true,
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
@@ -283,12 +271,6 @@ func TestAllCases(t *testing.T) {
 					rtv1.WithPingSourceStatusObservedGeneration(generation),
 				),
 			}},
-			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", sourceName),
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(sourceName, testNS),
-			},
 		}, {
 			Name: "Propagate CA certs",
 			Objects: []runtime.Object{
@@ -339,12 +321,6 @@ func TestAllCases(t *testing.T) {
 					rtv1.WithPingSourceStatusObservedGeneration(generation),
 				),
 			}},
-			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", sourceName),
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(sourceName, testNS),
-			},
 		}, {
 			Name: "deployment update due to env",
 			Objects: []runtime.Object{
@@ -368,11 +344,7 @@ func TestAllCases(t *testing.T) {
 			},
 			Key: testNS + "/" + sourceName,
 			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", sourceName),
 				Eventf(corev1.EventTypeNormal, pingSourceDeploymentUpdated, `PingSource adapter deployment updated`),
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(sourceName, testNS),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 				Object: rtv1.NewPingSource(sourceName, testNS,
@@ -439,12 +411,6 @@ func TestAllCases(t *testing.T) {
 					rtv1.WithPingSourceStatusObservedGeneration(generation),
 				),
 			}},
-			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", sourceName),
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(sourceName, testNS),
-			},
 		}, {
 			Name: "valid with dataBase64",
 			Objects: []runtime.Object{
@@ -487,12 +453,6 @@ func TestAllCases(t *testing.T) {
 					rtv1.WithPingSourceStatusObservedGeneration(generation),
 				),
 			}},
-			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", sourceName),
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(sourceName, testNS),
-			},
 		},
 	}
 
@@ -551,13 +511,4 @@ func makeAvailableMTAdapterWithDifferentEnv() *appsv1.Deployment {
 	os.Unsetenv("K_SINK_TIMEOUT")
 	WithDeploymentAvailable()(ma)
 	return ma
-}
-
-func patchFinalizers(name, namespace string) clientgotesting.PatchActionImpl {
-	action := clientgotesting.PatchActionImpl{}
-	action.Name = name
-	action.Namespace = namespace
-	patch := `{"metadata":{"finalizers":["pingsources.sources.knative.dev"],"resourceVersion":""}}`
-	action.Patch = []byte(patch)
-	return action
 }
