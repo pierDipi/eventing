@@ -14,14 +14,52 @@ _Secure event processing and discovery with CloudEvents_
 
 ## What is Knative Eventing?
 
-Knative Eventing is a collection of APIs that enable you to use an [event-driven architecture](https://en.wikipedia.org/wiki/Event-driven_architecture) with your applications. You can use these APIs to create components that route events from event producers (known as sources) to event consumers (known as sinks) that receive events. Sinks can also be configured to respond to HTTP requests by sending a response event.
+Knative Eventing is a collection of APIs that enable you to use
+an [event-driven architecture](https://en.wikipedia.org/wiki/Event-driven_architecture) with your
+applications. You can use these APIs to create components that route events from event producers (
+known as sources) to event consumers (known as sinks) that receive events. Sinks can also be
+configured to respond to HTTP requests by sending a response event.
 
-Knative Eventing is a standalone platform that provides support for various types of workloads, including standard Kubernetes Services and Knative Serving Services.
+Knative Eventing is a standalone platform that provides support for various types of workloads,
+including standard Kubernetes Services and Knative Serving Services.
 
-Knative Eventing uses standard HTTP requests to route events from event producers to event consumers, following the rules set by the [CloudEvents specification](https://cloudevents.io/). This is a standard set up by the CNCF that has wide support for many programming languages, making it easy to create, understand, send, and receive events.
+Knative Eventing uses standard HTTP POST requests to route events from event producers to event
+consumers, following the rules set by the [CloudEvents specification](https://cloudevents.io/). This
+is a standard set up by the CNCF that has wide support for many programming languages, making it
+easy to create, understand, send, and receive events.
 
-Knative Eventing components are loosely coupled, and can be developed and deployed independently of each other. Any producer can generate events before there are active event consumers that are listening for those events. Any event consumer can express interest in a class of events before there are producers that are creating those events.
+Knative Eventing components are loosely coupled, and can be developed and deployed independently of
+each other. Any producer can generate events before there are active event consumers that are
+listening for those events. Any event consumer can express interest in a class of events before
+there are producers that are creating those events.
 
+For more information on Eventing and how to use it, please refer to the documentation
+website: https://knative.dev/docs/eventing/
+
+## How to get involved
+
+### Share feedback
+
+The simplest and highly valuable contributions to the project is to share feedback or opinions,
+whether that's regarding a feature, docs, code quality, testing or something else,
+sharing feedback is highly valuable.
+
+For sharing feedback or opinions, you can use an existing (as a comment) or a
+new [GitHub issue](https://github.com/knative/eventing/issues), or
+any other [communication channel](https://knative.dev/docs/community/#communication-channels).
+
+### Helps us sha
+
+### Working Group Meetings
+
+If you are interested in contributing,
+see [the ready to work issues](https://clotributor.dev/search?ts_query_web=knative+eventing&page=1), [CONTRIBUTING.md](./CONTRIBUTING.md),
+[DEVELOPMENT.md](./DEVELOPMENT.md) and
+[Knative working groups](https://knative.dev/community/contributing/working-groups/working-groups/#eventing).
+
+Interested users should join
+[knative-users (for usage related discussions)](https://groups.google.com/forum/#!forum/knative-users)
+and [knative-dev (for development related discussions)](https://groups.google.com/forum/#!forum/knative-dev).
 
 ## What to expect here?
 
@@ -33,9 +71,9 @@ address a common need for cloud native development:
    can express an interest in an event or class of events that is not yet being
    produced.
 1. Services can be connected to create new applications
-   - without modifying producer or consumer, and
-   - with the ability to select a specific subset of events from a particular
-     producer.
+    - without modifying producer or consumer, and
+    - with the ability to select a specific subset of events from a particular
+      producer.
 
 ## More on Knative Eventing
 
@@ -49,9 +87,3 @@ For complete Knative Eventing documentation, see
 [Knative eventing](https://www.knative.dev/docs/eventing/) or
 [Knative docs](https://www.knative.dev/docs/) to learn about Knative.
 
-If you are interested in contributing, see [the ready to work issues](https://clotributor.dev/search?ts_query_web=knative+eventing&page=1), [CONTRIBUTING.md](./CONTRIBUTING.md),
-[DEVELOPMENT.md](./DEVELOPMENT.md) and
-[Knative working groups](https://knative.dev/community/contributing/working-groups/working-groups/#eventing).
-
-Interested users should join
-[knative-users](https://groups.google.com/forum/#!forum/knative-users).

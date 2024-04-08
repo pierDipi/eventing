@@ -1,3 +1,9 @@
+# Contribution guidelines
+
+So you want to hack on Knative Eventing? Yay! Please refer to Knative's overall
+[contribution guidelines](https://www.knative.dev/contributing/) to find out how
+you can help.
+
 # Development
 
 This doc explains how to setup a development environment so you can get started
@@ -47,13 +53,13 @@ You must install these tools:
 ### Create a cluster and a repo
 
 1. Set up a kubernetes cluster. You can use one of the resources below, or any other kubernetes cluster:
-   - [minikube start](https://minikube.sigs.k8s.io/docs/start/)
-   - [KinD quickstart](https://kind.sigs.k8s.io/docs/user/quick-start/)
+    - [minikube start](https://minikube.sigs.k8s.io/docs/start/)
+    - [KinD quickstart](https://kind.sigs.k8s.io/docs/user/quick-start/)
 1. Set up a Linux Container repository for pushing images. You can use any
    container image registry by adjusting the authentication methods and
    repository paths mentioned in the sections below.
-   - [Google Container Registry quickstart](https://cloud.google.com/container-registry/docs/pushing-and-pulling)
-   - [Docker Hub quickstart](https://docs.docker.com/docker-hub/)
+    - [Google Container Registry quickstart](https://cloud.google.com/container-registry/docs/pushing-and-pulling)
+    - [Docker Hub quickstart](https://docs.docker.com/docker-hub/)
 
 > :information_source: You'll need to be authenticated with your
 > `KO_DOCKER_REPO` before pushing images. Run `gcloud auth configure-docker` if
@@ -131,7 +137,7 @@ follow:
 KO_FLAGS=--platform="linux/amd64" ./hack/install.sh
 ```
 
-> :information_source: If you are getting the error `No resources found in cert-manager namespace`, you need to install [cert-manager](https://cert-manager.io/docs/installation/) manually before running the quick full build and install command. 
+> :information_source: If you are getting the error `No resources found in cert-manager namespace`, you need to install [cert-manager](https://cert-manager.io/docs/installation/) manually before running the quick full build and install command.
 
 ## Starting Eventing Controller
 
@@ -215,17 +221,17 @@ To run a single rekt test using the `e2e-debug.sh` script, follow these instruct
     ./hack/e2e-debug.sh <test_name> <test_dir>
     ```
 
-    Replace `<test_name>` with the name of the rekt test you want to run, and `<test_dir>` with the directory containing the test file.
+   Replace `<test_name>` with the name of the rekt test you want to run, and `<test_dir>` with the directory containing the test file.
 
-    **Example:**
+   **Example:**
 
     ```bash
     ./hack/e2e-debug.sh TestPingSourceWithSinkRef ./test/rekt
     ```
 
-    This will run the specified rekt test (`TestMyRektScenario` in this case) from the provided directory (`test/rekt/scenarios`).
+   This will run the specified rekt test (`TestMyRektScenario` in this case) from the provided directory (`test/rekt/scenarios`).
 
-    **Note:** Ensure that you have the necessary dependencies and configurations set up before running the test.
+   **Note:** Ensure that you have the necessary dependencies and configurations set up before running the test.
 
 3. The script will wait for Knative Eventing components to come up and then execute the specified test. If any failures occur during the test, relevant error messages will be displayed in the terminal.
 
@@ -489,5 +495,5 @@ telepresence quit
 ### Common issues when setting up with Ubuntu (WSL)
 
 - Go version mismatch: `sudo apt-get install golang-go` installs an older version of Go (1.18), which is too outdated for installing Ko and Kubectl
-   - Use [this method](https://www.digitalocean.com/community/tutorials/how-to-install-go-on-ubuntu-20-04) instead to manually install go using the .tar file
+    - Use [this method](https://www.digitalocean.com/community/tutorials/how-to-install-go-on-ubuntu-20-04) instead to manually install go using the .tar file
 - Use `go install` to install any additional gotools such as `goimports`
