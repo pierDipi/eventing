@@ -270,7 +270,9 @@ func SendsEventsWithEventTypes() *feature.Feature {
 		Must("delivers events on broker with URI", assert.OnStore(sink).MatchEvent(
 			test.HasType("dev.knative.sources.ping")).AtLeast(1)).
 		Must("PingSource test eventtypes match", eventtype.WaitForEventType(
-			eventtype.AssertPresent(expectedCeTypes)))
+			eventtype.AssertReady(expectedCeTypes),
+			eventtype.AssertPresent(expectedCeTypes),
+			eventtype.AssertReferencePresent(broker.AsKReference(brokerName))))
 
 	return f
 }
