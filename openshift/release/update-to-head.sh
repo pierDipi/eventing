@@ -23,6 +23,7 @@ git commit -sm ":fire: remove unneeded workflows" .github/
 # Update openshift's main and take all needed files from there.
 git fetch openshift main
 git checkout openshift/main openshift OWNERS_ALIASES OWNERS Makefile
+git checkout .konflux .tekton || true
 git add openshift OWNERS_ALIASES OWNERS Makefile
 git commit -m ":open_file_folder: Update openshift specific files."
 
