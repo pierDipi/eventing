@@ -145,7 +145,7 @@ spec:
   - name: prefetch-dependencies
     params:
     - name: input
-      value: '{"type": "gomod", "path": "."}'
+      value: $(params.prefetch-input)
     - name: SOURCE_ARTIFACT
       value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
     - name: ociStorage
@@ -163,6 +163,11 @@ spec:
       - name: kind
         value: task
       resolver: bundles
+    when:
+    - input: $(params.prefetch-input)
+      operator: notin
+      values:
+      - ""
     workspaces:
     - name: git-basic-auth
       workspace: git-auth
@@ -190,9 +195,7 @@ spec:
     - name: BUILD_ARGS_FILE
       value: $(params.build-args-file)
     - name: SOURCE_ARTIFACT
-      value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
-    - name: CACHI2_ARTIFACT
-      value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
+      value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
     runAfter:
     - prefetch-dependencies
     taskRef:
@@ -304,7 +307,7 @@ spec:
   - name: sast-snyk-check
     params:
     - name: SOURCE_ARTIFACT
-      value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
+      value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
     runAfter:
     - build-container
     taskRef:
@@ -391,7 +394,7 @@ spec:
     - name: CONTEXT
       value: $(params.path-context)
     - name: SOURCE_ARTIFACT
-      value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
+      value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
     runAfter:
     - build-container
     taskRef:
