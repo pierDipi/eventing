@@ -96,8 +96,6 @@ spec:
           capabilities:
             drop:
             - ALL
-          seccompProfile:
-            type: RuntimeDefault
 
         livenessProbe:
           httpGet:
