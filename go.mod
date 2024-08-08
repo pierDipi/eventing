@@ -1,6 +1,7 @@
 module knative.dev/eventing
 
 go 1.22
+toolchain go1.22.6
 
 require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20210420163308-c1402a70e2f1
