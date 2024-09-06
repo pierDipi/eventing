@@ -30,8 +30,6 @@ spec:
       value: '{{revision}}'
     - name: hermetic
       value: 'true'
-    - name: prefetch-input
-      value: '{ "type": "gomod", "path": "." }'
   pipelineRef:
     name: docker-build
   taskRunTemplate: {}
