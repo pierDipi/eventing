@@ -28,6 +28,10 @@ spec:
       value: quay.io/redhat-user-workloads/ocp-serverless-tenant/serverless-operator-release-135/knative-eventing-apiserver-receive-adapter:on-pr-{{revision}}
     - name: revision
       value: '{{revision}}'
+    - name: hermetic
+      value: 'true'
+    - name: prefetch-input
+      value: '{ "type": "gomod", "path": "." }'
   pipelineRef:
     name: docker-build
   taskRunTemplate: {}
