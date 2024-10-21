@@ -25,14 +25,13 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/pkg/controller"
 
-	duckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	"knative.dev/eventing/pkg/scheduler"
-
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	gtesting "k8s.io/client-go/testing"
+
+	duckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset/fake"
@@ -74,45 +73,6 @@ func (d *sampleVPod) GetResourceVersion() string {
 	return d.rsrcversion
 }
 
-func MakeNode(name, zonename string) *v1.Node {
-	obj := &v1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			Labels: map[string]string{
-				scheduler.ZoneLabel: zonename,
-			},
-		},
-	}
-	return obj
-}
-
-func MakeNodeNoLabel(name string) *v1.Node {
-	obj := &v1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-	}
-	return obj
-}
-
-func MakeNodeTainted(name, zonename string) *v1.Node {
-	obj := &v1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			Labels: map[string]string{
-				scheduler.ZoneLabel: zonename,
-			},
-		},
-		Spec: v1.NodeSpec{
-			Taints: []v1.Taint{
-				{Key: "node.kubernetes.io/unreachable", Effect: v1.TaintEffectNoExecute},
-				{Key: "node.kubernetes.io/unreachable", Effect: v1.TaintEffectNoSchedule},
-			},
-		},
-	}
-	return obj
-}
-
 func MakeStatefulset(ns, name string, replicas int32) *appsv1.StatefulSet {
 	obj := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -130,14 +90,14 @@ func MakeStatefulset(ns, name string, replicas int32) *appsv1.StatefulSet {
 	return obj
 }
 
-func MakePod(ns, name, nodename string) *v1.Pod {
+func MakePod(ns, name string) *v1.Pod {
 	obj := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: ns,
 		},
 		Spec: v1.PodSpec{
-			NodeName: nodename,
+			NodeName: "worker",
 		},
 	}
 	return obj
